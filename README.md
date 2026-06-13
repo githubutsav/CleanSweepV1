@@ -114,7 +114,7 @@ The app uses Supabase with the following core tables:
 
 ---
 
-## 🐺 Wolfram Language Integration
+##  <img src="https://img.shields.io/badge/Wolfram%20Language-DD1100?style=for-the-badge&logo=wolframlanguage&logoColor=white" alt="Wolfram Language logo" height="28" valign="middle"> Wolfram Language Integration
 
 CleanSweep uses **Wolfram Language** as its computational intelligence layer, deployed as REST APIs on Wolfram Cloud.
 
