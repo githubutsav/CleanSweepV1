@@ -33,6 +33,24 @@
 
 ---
 
+## 🧠 Computational Intelligence Layer
+
+CleanSweep uses Wolfram Language as the project's computational intelligence layer for the heavy logic that would otherwise require a separate backend service.
+
+### `classify_waste.wl` - AI Waste Classification
+
+When a citizen takes a photo of garbage on the Home page, the React app sends the image as a binary blob to the Wolfram Cloud API. Wolfram then uses `ImageIdentify` to analyze the image and detect the object in the photo. From there, custom pattern matching with `StringContainsQ` and `Switch` maps that object into a structured waste category such as Plastic, E-Waste, or Medical waste. Finally, Wolfram uses its knowledge base to estimate severity, recyclability, and decomposition time.
+
+### `optimize_route.wl` - Garbage Truck Route Optimization
+
+When a municipal worker clicks **Optimize Route** on the Admin Dashboard map, the app gathers the GPS coordinates of all pending garbage reports and sends them to the Wolfram API. Wolfram converts those raw latitude and longitude values into native `GeoPosition` objects, then uses `FindShortestTour` to solve the Travelling Salesman Problem and produce the most fuel-efficient route. It also calculates the total real-world distance with `GeoDistance` and returns the numbered route back to React, which draws it on the map.
+
+### `APIFunction` and `CloudDeploy`
+
+Instead of running a heavy Node or Python backend, CleanSweep uses a serverless microservice architecture. The Wolfram logic is wrapped in `APIFunction` to define the expected inputs, such as images or JSON strings, and deployed with `CloudDeploy` to create live REST API endpoints on Wolfram's servers. The React frontend simply fetches those endpoints whenever it needs heavy computational lifting.
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
