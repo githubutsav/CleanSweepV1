@@ -176,9 +176,8 @@ export default function Admin({ session }) {
     try {
       let result;
 
-      if (!apiUrl || apiUrl.includes('your_')) {
-        // Fallback: simple nearest-neighbor heuristic when Wolfram not configured
-        console.warn('Wolfram Route API not configured – using local fallback.');
+      const fallbackRouting = () => {
+        console.warn('Using local fallback routing.');
         const ordered = [...locations];
         const visited = [ordered.shift()];
         while (ordered.length > 0) {
@@ -195,23 +194,32 @@ export default function Admin({ session }) {
         for (let i = 0; i < visited.length - 1; i++) {
           totalDist += Math.sqrt(Math.pow(visited[i+1].lat - visited[i].lat, 2) + Math.pow(visited[i+1].lon - visited[i].lon, 2)) * 111;
         }
-        result = {
+        return {
           orderedRoute: visited.map((v, i) => ({ ...v, stop: i + 1 })),
           totalDistanceKm: Math.round(totalDist * 10) / 10,
           numberOfStops: visited.length,
           algorithm: 'Nearest-Neighbor Heuristic (Local Fallback)',
-          poweredBy: 'Wolfram — FindShortestTour + GeoDistance'
+          poweredBy: 'Local JavaScript Fallback'
         };
+      };
+
+      if (!apiUrl || apiUrl.includes('your_')) {
+        result = fallbackRouting();
       } else {
         const formData = new URLSearchParams();
         formData.append('locations', JSON.stringify(locations));
 
-        const res = await fetch(apiUrl, {
-          method: 'POST',
-          body: formData
-        });
-        if (!res.ok) throw new Error(`Wolfram API error: ${res.status}`);
-        result = await res.json();
+        try {
+          const res = await fetch(apiUrl, {
+            method: 'POST',
+            body: formData
+          });
+          if (!res.ok) throw new Error(`Wolfram API error: ${res.status}`);
+          result = await res.json();
+        } catch (fetchErr) {
+          console.warn('Wolfram API failed, falling back to local routing:', fetchErr);
+          result = fallbackRouting();
+        }
       }
 
       setOptimizedRoute(result);
