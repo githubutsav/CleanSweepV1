@@ -1,0 +1,28 @@
+[33m705014d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Readme documentation change
+[33m585cef0[m Document Wolfram computational intelligence layer
+[33m3e0001d[m Update README.md
+[33m52d65b6[m Add public images, icons, and GeoJSON data
+[33m83ce5b4[m Add user profile and rewards marketplace
+[33m504788d[m Build municipal admin dashboard
+[33m3891a68[m Build ToastContainer UI component
+[33m8128737[m Add Vite build tool logo
+[33m471c97e[m Add high quality hero banner image
+[33m129a98c[m Add scalable vector icons sprite
+[33m4ac49a1[m Create rewards marketplace for points
+[33m541eb4b[m Implement user authentication interface
+[33m666d3e5[m Create toast notification logic
+[33mf7fc090[m Setup Zustand global state management
+[33m55a29f6[m Integrate interactive 3D Globe componen
+[33m89b0571[m Create Home dashboard with interactive map
+[33me9a8934[m Implement Supabase client connection
+[33me24f926[m Define global CSS variables and reset
+[33mf202262[m Setup main App routing architecture
+[33m768e8fe[m Add Vercel deployment configuration
+[33m83d046f[m Add specific component styling for App
+[33m1bfa97e[m Initialize React root and strict mode
+[33m6c7d7d5[m Configure strict ESLint rules for code quality
+[33mb364c32[m Add gitignore to exclude node_modules
+[33m2281c82[m Build beautiful public landing page hero
+[33mc7d25eb[m Setup base HTML entry point
+[33mf1ef97f[m Add comprehensive project documentation
+[33m7a49a32[m Setup Vite project and dependencies
