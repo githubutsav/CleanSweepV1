@@ -172,7 +172,7 @@ totalDistance = Total[Table[
 
 ## 📸 Screenshots
 
-> Coming soon
+![CleanSweep Dashboard](./public/clean.jpeg)
 
 ---
 
