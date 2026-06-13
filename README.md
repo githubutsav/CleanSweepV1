@@ -1,12 +1,12 @@
-# 🧹 CleanSweep
+# <img src="./public/favicon.svg" width="30" height="30" align="top" /> CleanSweep
 
 **CleanSweep** is a civic waste management platform that empowers citizens to report garbage, track cleanups, earn rewards, and build cleaner communities — all in one app.
 
-> **Powered by Wolfram Language** 🐺
+> **Powered by Wolfram** <img src="./src/assets/wolfram-logo.svg" width="16" height="16" />
 > This project leverages Wolfram Machine Learning to automatically classify and verify images of waste, ensuring accurate and efficient civic reporting.
 
 ![CleanSweep](https://img.shields.io/badge/Built%20with-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)
-![Wolfram](https://img.shields.io/badge/AI-Wolfram%20Language-DD1100?style=for-the-badge&logo=wolframlanguage)
+![Wolfram](https://img.shields.io/badge/AI-Wolfram-DD1100?style=for-the-badge&logo=wolframlanguage)
 ![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?style=for-the-badge&logo=supabase)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
@@ -29,7 +29,7 @@
 | Layer | Technology |
 |---|---|
 | Frontend | React 19 + Vite |
-| AI / ML | Wolfram Language (Cloud API) |
+| AI / ML | Wolfram (Cloud API) |
 | Styling | Vanilla CSS (Glassmorphism dark theme) |
 | Backend | Supabase (Auth, Database, Storage) |
 | Maps | Leaflet.js |
@@ -114,9 +114,9 @@ The app uses Supabase with the following core tables:
 
 ---
 
-##  <img src="https://img.shields.io/badge/Wolfram%20Language-DD1100?style=for-the-badge&logo=wolframlanguage&logoColor=white" alt="Wolfram Language logo" height="28" valign="middle"> Wolfram Language Integration
+## <img src="./src/assets/wolfram-logo.svg" width="28" height="28" align="top" /> Wolfram Integration
 
-CleanSweep uses **Wolfram Language** as its computational intelligence layer, deployed as REST APIs on Wolfram Cloud.
+CleanSweep uses **Wolfram** as its computational intelligence layer, deployed as REST APIs on Wolfram Cloud.
 
 ### AI Waste Classification (`classify_waste.wl`)
 

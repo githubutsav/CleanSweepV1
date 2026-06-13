@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, CheckCircle2, XCircle } from 'lucide-react';
+import logo from '../assets/logo.svg';
 
 // ── Animated toast notification card ──────────────────────────────────────────
 function NotificationCard({ message, isError, onDone }) {
@@ -108,7 +109,7 @@ export default function Login() {
         {/* Logo */}
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <img src="/favicon.svg" className="w-9 h-9 filter drop-shadow-[0_0_8px_rgba(5,255,163,0.5)]" alt="CleanSweep Logo" />
+            <img src={logo} className="w-9 h-9 filter drop-shadow-[0_0_8px_rgba(5,255,163,0.5)]" alt="CleanSweep Logo" />
             <span className="text-3xl font-extrabold tracking-tight">CleanSweep</span>
           </div>
           <p className="text-slate-400 text-sm">Report illegal dumping in your city</p>

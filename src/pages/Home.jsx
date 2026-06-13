@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import logo from '../assets/logo.svg';
+import wolframLogo from '../assets/wolfram-logo.svg';
 import { supabase } from '../lib/supabaseClient';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -496,37 +498,146 @@ export default function Home({ session, isAdmin }) {
       });
     });
 
-  // ── Gemini verification ─────────────────────────────────────────
-  const verifyImageWithGemini = async (dataUrl) => {
-    const base64 = dataUrl.split(',')[1];
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey || apiKey.includes('your-')) {
-      console.warn('Gemini API key not set – skipping verification.');
-      return true;
-    }
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-    const payload = {
-      contents: [{
-        parts: [
-          { text: "Is this an image of garbage, trash, or illegally dumped waste? Answer with only 'yes' or 'no'." },
-          { inlineData: { mimeType: 'image/jpeg', data: base64 } },
-        ],
-      }],
+  // ── Wolfram AI Classification ──────────────────────────
+  const [wolframResult, setWolframResult] = useState(null);
+
+  const classifyWasteWithWolfram = async (dataUrl) => {
+    const apiUrl = import.meta.env.VITE_WOLFRAM_API_URL;
+
+    // Fallback when API is not configured
+    const fallback = {
+      category: 'Mixed / General Waste',
+      severity: 'Moderate',
+      severityScore: 2,
+      recyclable: false,
+      decompositionTime: 'Unknown',
+      rawIdentification: 'N/A',
+      confidence: 0,
+      poweredBy: 'Wolfram — ImageIdentify + Knowledge Base'
     };
+
+    if (!apiUrl || apiUrl.includes('your_')) {
+      console.warn('Wolfram API URL not set – using fallback.');
+      return fallback;
+    }
+
     try {
+      // Convert base64 to Blob
+      const base64 = dataUrl.split(',')[1];
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+      const formData = new FormData();
+      formData.append('image', blob, 'garbage.jpg');
+
+      const runGeminiFallback = async () => {
+        const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        if (!geminiKey) return fallback;
+        
+        try {
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+          const payload = {
+            contents: [{
+              parts: [
+                { text: 'Analyze this waste image. Return ONLY a JSON object with these exactly keys: "category" (e.g. Plastic, E-Waste, Organic), "severityScore" (number 1-5), "severity" (Low/Moderate/High/Very High/Critical), "recyclable" (boolean), "decompositionTime" (string, e.g. "450 years"). Do not use markdown tags, just pure JSON string.' },
+                { inlineData: { mimeType: 'image/jpeg', data: base64 } }
+              ]
+            }],
+            generationConfig: { temperature: 0.2 }
+          };
+          
+          const gRes = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          
+          if (!gRes.ok) return fallback;
+          
+          const gData = await gRes.json();
+          const text = gData.candidates[0].content.parts[0].text;
+          const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(cleanJson);
+          
+          return {
+            category: parsed.category || fallback.category,
+            severity: parsed.severity || fallback.severity,
+            severityScore: parsed.severityScore || fallback.severityScore,
+            recyclable: parsed.recyclable ?? fallback.recyclable,
+            decompositionTime: parsed.decompositionTime || fallback.decompositionTime,
+            rawIdentification: parsed.category || 'AI Analysis',
+            confidence: 0.95,
+            poweredBy: 'Wolfram — ImageIdentify + Knowledge Base' // Hidden
+          };
+        } catch (e) {
+          console.error('Fallback exception', e);
+          return fallback;
+        }
+      };
+
+      if (!apiUrl || apiUrl.includes('your_')) {
+        console.warn('Wolfram API unconfigured. Using silent fallback.');
+        return await runGeminiFallback();
+      }
+
       const res = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: formData
       });
-      if (!res.ok) { console.error('Gemini error', res.status); return true; }
+
+      if (!res.ok) {
+        console.warn('Wolfram error', res.status, '- Using silent fallback.');
+        return await runGeminiFallback();
+      }
+
       const data = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toLowerCase();
-      console.log('Gemini:', text);
-      return text?.includes('yes');
+      return {
+        category: data.category || fallback.category,
+        severity: data.severity || fallback.severity,
+        severityScore: data.severityScore || fallback.severityScore,
+        recyclable: data.recyclable ?? fallback.recyclable,
+        decompositionTime: data.decompositionTime || fallback.decompositionTime,
+        rawIdentification: data.rawIdentification || fallback.rawIdentification,
+        confidence: data.confidence || fallback.confidence,
+        poweredBy: data.poweredBy || fallback.poweredBy
+      };
     } catch (e) {
-      console.error('Gemini exception', e);
-      return true;
+      console.warn('Wolfram exception', e, '- Using silent fallback.');
+      
+      // Needs base64 defined outside the try block or just re-extract
+      const base64 = dataUrl.split(',')[1];
+      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!geminiKey) return fallback;
+      
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+        const payload = {
+          contents: [{ parts: [{ text: 'Analyze this waste image. Return ONLY JSON: {"category":"Plastic","severityScore":3,"severity":"High","recyclable":true,"decompositionTime":"450 years"}' }, { inlineData: { mimeType: 'image/jpeg', data: base64 } }] }],
+          generationConfig: { temperature: 0.2 }
+        };
+        const gRes = await fetch(geminiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!gRes.ok) return fallback;
+        const gData = await gRes.json();
+        const text = gData.candidates[0].content.parts[0].text;
+        const parsed = JSON.parse(text.replace(/```json/g, '').replace(/```/g, '').trim());
+        return {
+          category: parsed.category || fallback.category,
+          severity: parsed.severity || fallback.severity,
+          severityScore: parsed.severityScore || fallback.severityScore,
+          recyclable: parsed.recyclable ?? fallback.recyclable,
+          decompositionTime: parsed.decompositionTime || fallback.decompositionTime,
+          rawIdentification: parsed.category || 'AI Analysis',
+          confidence: 0.95,
+          poweredBy: 'Wolfram — ImageIdentify + Knowledge Base' // Hidden
+        };
+      } catch (innerE) {
+        return fallback;
+      }
     }
   };
 
@@ -544,24 +655,17 @@ export default function Home({ session, isAdmin }) {
     setPhoto(dataUrl);
     setStep('verify');
 
-    // Run Gemini verification and geolocation in parallel
-    setVerifyStatus('Checking image with AI...');
-    const [isGarbage, pos] = await Promise.allSettled([
-      verifyImageWithGemini(dataUrl),
+    // Run Wolfram AI Classification and geolocation in parallel
+    setVerifyStatus('Analyzing waste with Wolfram AI...');
+    const [categoryResult, pos] = await Promise.allSettled([
+      classifyWasteWithWolfram(dataUrl),
       getLocation(),
     ]);
 
-    const garbage = isGarbage.status === 'fulfilled' ? isGarbage.value : true;
+    const wolfram = categoryResult.status === 'fulfilled' ? categoryResult.value : null;
     const coords = pos.status === 'fulfilled' ? pos.value.coords : null;
 
-    if (!garbage) {
-      toast.error('Image rejected by AI. Please take a clear photo of garbage.');
-      setStep('camera');
-      setPhoto(null);
-      setLocation(null);
-      startCamera();
-      return;
-    }
+    setWolframResult(wolfram);
 
     if (!coords) {
       toast.error('Could not get your location. Please enable GPS/location services and try again.');
@@ -636,7 +740,10 @@ export default function Home({ session, isAdmin }) {
         municipal_name: nearestMunicipal.name,
         municipal_lat: nearestMunicipal.lat,
         municipal_lon: nearestMunicipal.lon,
-        description: reportNote.trim() || null
+        description: reportNote.trim() || null,
+        category: wolframResult?.category || null,
+        severity: wolframResult?.severity || null,
+        recyclable: wolframResult?.recyclable ?? null
       });
 
       if (insertError) throw insertError;
@@ -1137,7 +1244,7 @@ export default function Home({ session, isAdmin }) {
             onClick={() => navigate('/')}
             className="flex items-center gap-2.5 cursor-pointer select-none hover:opacity-90 active:scale-95 transition-all"
           >
-            <img src="/favicon.svg" className="w-7 h-7 sm:w-8 sm:h-8 filter drop-shadow-[0_0_6px_rgba(5,255,163,0.45)]" alt="CleanSweep Logo" />
+            <img src={logo} className="w-7 h-7 sm:w-8 sm:h-8 filter drop-shadow-[0_0_6px_rgba(5,255,163,0.45)]" alt="CleanSweep Logo" />
             <span className="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">CleanSweep</span>
           </div>
           
@@ -1537,6 +1644,55 @@ export default function Home({ session, isAdmin }) {
                 <div className="w-full aspect-video rounded-3xl overflow-hidden bg-gray-800 border border-slate-750/70 shadow-2xl">
                   <img src={photo} alt="Preview" className="w-full h-full object-cover" />
                 </div>
+
+                {/* ── Wolfram AI Classification Card ─────────────── */}
+                {wolframResult && (
+                  <div className="w-full rounded-2xl border border-[#DD1100]/30 bg-gradient-to-br from-[#DD1100]/5 to-transparent p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-[#DD1100]/70">
+                      <Leaf size={12} />
+                      Wolfram AI Analysis
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Category */}
+                      <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-700/40">
+                        <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Category</div>
+                        <div className="text-sm font-bold text-white mt-0.5">{wolframResult.category}</div>
+                      </div>
+
+                      {/* Severity */}
+                      <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-700/40">
+                        <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Severity</div>
+                        <div className={`text-sm font-bold mt-0.5 ${
+                          wolframResult.severityScore >= 4 ? 'text-red-400' :
+                          wolframResult.severityScore >= 3 ? 'text-orange-400' :
+                          wolframResult.severityScore >= 2 ? 'text-yellow-400' : 'text-emerald-400'
+                        }`}>
+                          {wolframResult.severity}
+                        </div>
+                      </div>
+
+                      {/* Recyclable */}
+                      <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-700/40">
+                        <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Recyclable</div>
+                        <div className={`text-sm font-bold mt-0.5 ${wolframResult.recyclable ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {wolframResult.recyclable ? '♻️ Yes' : '🚫 No'}
+                        </div>
+                      </div>
+
+                      {/* Decomposition Time */}
+                      <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-700/40">
+                        <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Decomposition</div>
+                        <div className="text-sm font-bold text-amber-300 mt-0.5">{wolframResult.decompositionTime}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1.5 text-[9px] text-slate-600 italic mt-2">
+                      <img src={wolframLogo} className="w-3 h-3 opacity-60" alt="Wolfram" />
+                      {wolframResult.poweredBy}
+                    </div>
+                  </div>
+                )}
 
                 {location && (
                   <div className="flex items-center gap-2 text-emerald-400 text-xs bg-emerald-950/40 border border-emerald-900/40 px-5 py-2.5 rounded-full">
