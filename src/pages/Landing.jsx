@@ -294,6 +294,20 @@ export default function Landing({ session }) {
                 </p>
               </div>
             </div>
+            {/* Wolfram AI Card — Full width highlight */}
+            <div className="md:col-span-4 glass-card p-6 md:p-stack-md rounded-xl glow-hover flex flex-col sm:flex-row items-start sm:items-center gap-6 group cursor-pointer relative overflow-hidden" onClick={handleSignIn}>
+              <div className="absolute top-0 right-0 w-48 h-48 bg-[#DD1100]/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="bg-[#DD1100]/10 p-4 rounded-full sm:shrink-0 transition-colors group-hover:bg-[#DD1100]/20 border border-[#DD1100]/20">
+                <img src={wolframLogo} alt="Wolfram" className="w-8 h-8" />
+              </div>
+              <div className="relative z-10">
+                <h3 className="font-headline-md text-headline-md text-white font-bold tracking-tight">Wolfram AI</h3>
+                <p className="text-on-surface-variant/90 text-sm font-medium">
+                  Neural net image classification identifies waste type, severity, recyclability, and decomposition time. Route optimization uses <span className="text-[#DD1100] font-semibold">FindShortestTour</span> to compute the most fuel-efficient garbage truck route.
+                </p>
+              </div>
+            </div>
+
 
             {/* Small Card 3 - Leaderboard */}
             <div className="glass-card p-6 md:p-stack-md rounded-xl glow-hover flex flex-col justify-between group cursor-pointer" onClick={handleSignIn}>
@@ -341,19 +355,7 @@ export default function Landing({ session }) {
               </div>
             </div>
 
-            {/* Wolfram AI Card — Full width highlight */}
-            <div className="md:col-span-4 glass-card p-6 md:p-stack-md rounded-xl glow-hover flex flex-col sm:flex-row items-start sm:items-center gap-6 group cursor-pointer relative overflow-hidden" onClick={handleSignIn}>
-              <div className="absolute top-0 right-0 w-48 h-48 bg-[#DD1100]/5 rounded-full blur-3xl pointer-events-none" />
-              <div className="bg-[#DD1100]/10 p-4 rounded-full sm:shrink-0 transition-colors group-hover:bg-[#DD1100]/20 border border-[#DD1100]/20">
-                <img src={wolframLogo} alt="Wolfram" className="w-8 h-8" />
-              </div>
-              <div className="relative z-10">
-                <h3 className="font-headline-md text-headline-md text-white font-bold tracking-tight">Wolfram AI</h3>
-                <p className="text-on-surface-variant/90 text-sm font-medium">
-                  Neural net image classification identifies waste type, severity, recyclability, and decomposition time. Route optimization uses <span className="text-[#DD1100] font-semibold">FindShortestTour</span> to compute the most fuel-efficient garbage truck route.
-                </p>
-              </div>
-            </div>
+
           </div>
         </section>
 

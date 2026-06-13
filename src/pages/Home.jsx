@@ -886,7 +886,7 @@ export default function Home({ session, isAdmin }) {
       setUpvotedIds(newUpvotedList);
       localStorage.setItem('upvotedReports', JSON.stringify(newUpvotedList));
     } catch (err) {
-      toast.error(`Error raising voice: ${err.message}. Make sure you run the SQL migration to add upvotes column.`);
+      toast.error('Could not upvote this report. Please try again later.');
     }
   };
 
@@ -920,7 +920,7 @@ export default function Home({ session, isAdmin }) {
       // Clear input state
       setCommentInputs(prev => ({ ...prev, [reportId]: '' }));
     } catch (err) {
-      alert(`Error adding comment: ${err.message}. Make sure you run the SQL migration to add comments column.`);
+      alert('Could not post your comment. Please try again later.');
     }
   };
 

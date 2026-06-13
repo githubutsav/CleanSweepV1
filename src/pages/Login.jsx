@@ -97,7 +97,7 @@ export default function Login() {
       // Browser will redirect — no need to navigate manually
     } catch (error) {
       console.error('Google OAuth error:', error);
-      showMsg(error.message || 'Google sign-in failed. Make sure Google provider is enabled in Supabase.', true);
+      showMsg('Google sign-in failed. Please try again later.', true);
       setGoogleLoading(false);
     }
   };
@@ -224,10 +224,7 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Supabase config hint */}
-        <p className="text-center text-xs text-slate-600">
-          New project? Make sure to run the database SQL setup and enable Email auth in Supabase.
-        </p>
+
       </div>
     </div>
   );

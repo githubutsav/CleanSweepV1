@@ -62,7 +62,7 @@ function App() {
       <ToastContainer />
       <Routes>
         <Route path="/login" element={!session ? <Login /> : <Navigate to="/dashboard" />} />
-        <Route path="/" element={<Landing session={session} />} />
+        <Route path="/" element={session ? <Navigate to="/dashboard" /> : <Landing session={session} />} />
         <Route
           path="/dashboard"
           element={session ? <Home session={session} isAdmin={isAdmin} /> : <Navigate to="/login" />}

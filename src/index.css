@@ -49,6 +49,18 @@
   --color-on-background: #e2e3df;
   --color-surface-variant: #333533;
 
+  /* Premium Navy scale to unify Landing and Dashboard */
+  --color-slate-950: #040910;
+  --color-slate-900: #08121e;
+  --color-slate-850: #0a1725;
+  --color-slate-800: #0d1b2a;
+  --color-slate-750: #102133;
+  --color-slate-700: #142a42;
+  --color-slate-650: #183350;
+  --color-slate-600: #1c3b5e;
+  --color-slate-500: #2a527c;
+  --color-slate-400: #4274a1;
+
   --font-headline-xl: "Sora", sans-serif;
   --font-stats-lg: "Sora", sans-serif;
   --font-body-lg: "Inter", sans-serif;
