@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, CheckCircle2, XCircle } from 'lucide-react';
+import { Mail, Lock, User, CheckCircle2, XCircle, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.svg';
 
 // ── Animated toast notification card ──────────────────────────────────────────
@@ -43,6 +43,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [toast, setToast] = useState(null); // { message, isError }
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const showMsg = (text, error = false) => {
@@ -164,14 +165,21 @@ export default function Login() {
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="glass-input w-full pl-9 pr-3 py-2.5 rounded-lg text-sm text-white placeholder-slate-500"
+                  className="glass-input w-full pl-9 pr-10 py-2.5 rounded-lg text-sm text-white placeholder-slate-500"
                   placeholder="Min. 6 characters"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-550 hover:text-[#41eec2] transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
