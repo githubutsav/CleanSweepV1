@@ -31,7 +31,9 @@ import {
   Check,
   Compass,
   Award,
-  Leaf
+  Leaf,
+  LayoutDashboard,
+  Plus
 } from 'lucide-react';
 
 // 3D Planet Component using Vanilla Three.js
@@ -1266,6 +1268,18 @@ export default function Home({ session, isAdmin }) {
 
         {/* Nav items */}
         <nav className="flex-1 space-y-1 px-2">
+          {/* Dashboard home link */}
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer text-left"
+            style={{ color: '#c4c6cc' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(65,238,194,0.1)'; e.currentTarget.style.color = '#41eec2'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#c4c6cc'; }}
+          >
+            <LayoutDashboard size={18} />
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>Dashboard</span>
+          </button>
+
           {[
             { id: 'report', label: 'Report', icon: Camera },
             { id: 'explore-map', label: 'Map', icon: Map },

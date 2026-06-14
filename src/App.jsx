@@ -7,6 +7,7 @@ import Landing from './pages/Landing';
 import Admin from './pages/Admin';
 import Marketplace from './pages/Marketplace';
 import Profile from './pages/Profile';
+import DashboardOverview from './pages/DashboardOverview';
 import { useCleanStore } from './lib/store';
 import ToastContainer from './components/ToastContainer';
 
@@ -50,7 +51,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white flex-col gap-4 relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center bg-[#0d1b2a] text-white flex-col gap-4 relative overflow-hidden">
         <div className="glass-orb-1" />
         <div className="glass-orb-2" />
         <div className="glass-orb-3" />
@@ -70,12 +71,25 @@ function App() {
       <div className="glass-orb-3" />
       <ToastContainer />
       <Routes>
+        {/* Auth */}
         <Route path="/login" element={!session ? <Login /> : <Navigate to="/dashboard" />} />
+
+        {/* Landing */}
         <Route path="/" element={session ? <Navigate to="/dashboard" /> : <Landing session={session} />} />
+
+        {/* Dashboard overview — first page after login */}
         <Route
           path="/dashboard"
+          element={session ? <DashboardOverview session={session} isAdmin={isAdmin} /> : <Navigate to="/login" />}
+        />
+
+        {/* Report / Map / Community page */}
+        <Route
+          path="/dashboard/report"
           element={session ? <Home session={session} isAdmin={isAdmin} /> : <Navigate to="/login" />}
         />
+
+        {/* Admin */}
         <Route
           path="/admin"
           element={
@@ -84,6 +98,7 @@ function App() {
             <Navigate to="/dashboard" />
           }
         />
+
         <Route path="/marketplace" element={<Marketplace session={session} />} />
         <Route path="/profile" element={session ? <Profile /> : <Navigate to="/login" />} />
       </Routes>
