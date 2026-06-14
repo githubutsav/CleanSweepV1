@@ -1336,7 +1336,7 @@ export default function Home({ session, isAdmin }) {
     : null;
 
   return (
-    <div className="flex min-h-screen bg-[#111412] text-[#e2e3df] font-sans overflow-x-hidden">
+    <div className="flex min-h-screen bg-[#111412] text-[#e2e3df] font-sans">
 
       {/* ── Sidebar Navigation ── */}
       <aside className="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 z-40 py-6"
@@ -2822,7 +2822,7 @@ export default function Home({ session, isAdmin }) {
                   </div>
 
                   {/* Feed Items */}
-                  <div className="space-y-6">
+                  <div className="space-y-6 max-h-[850px] lg:max-h-[calc(100vh-250px)] overflow-y-auto pr-2 pb-10 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-secondary/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-secondary/40">
                     {loadingReports ? (
                       <div className="text-center py-16 text-on-surface-variant animate-pulse text-sm">Loading feed reports...</div>
                     ) : communityReports.length === 0 ? (
