@@ -1,18 +1,28 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.svg';
 import * as THREE from 'three';
 import { 
+  LayoutDashboard,
+  Camera, 
+  Map, 
+  Megaphone, 
+  Store, 
+  User, 
+  ShieldCheck, 
   Star, 
   CheckCircle2, 
   Leaf, 
-  Store, 
-  ArrowLeft,
-  Phone,
+  X, 
+  Bell, 
+  Search, 
+  Plus, 
+  Phone, 
   MessageSquare,
-  User
+  Award
 } from 'lucide-react';
 import { useCleanStore } from '../lib/store';
+import { supabase } from '../lib/supabaseClient';
 
 // Collectors directory list
 const collectors = [
@@ -110,7 +120,7 @@ function ThreeCoin() {
   }, []);
 
   return (
-    <div className="relative flex items-center justify-center w-[110px] h-[110px]">
+    <div className="relative flex items-center justify-center w-[110px] h-[110px] shrink-0">
       <canvas ref={canvasRef} className="cursor-pointer" />
     </div>
   );
@@ -123,11 +133,25 @@ export default function Marketplace() {
   const [plantingTree, setPlantingTree] = useState(null); // Selected tree for confirm dialog
   const [successTree, setSuccessTree] = useState(null); // Tree that was successfully planted
   const [certificateId, setCertificateId] = useState(null);
+  
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   // Sync profile data on mount
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]);
+    if (session?.user) {
+      const checkAdminRole = async () => {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+        setIsAdmin(data?.role === 'admin');
+      };
+      checkAdminRole();
+    }
+  }, [session, fetchProfile]);
 
   const handlePlantConfirm = async () => {
     if (!plantingTree) return;
@@ -157,164 +181,278 @@ export default function Marketplace() {
       setCertificateId(dummyId);
       setSuccessTree(plantingTree);
       setPlantingTree(null);
+      fetchProfile();
     } else {
       alert("Error processing tree donation. Please try again.");
       setPlantingTree(null);
     }
   };
 
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'report',    label: 'Report',    icon: Camera,          path: '/dashboard/report', state: { viewMode: 'report' } },
+    { id: 'map',       label: 'Map',       icon: Map,             path: '/dashboard/report', state: { viewMode: 'explore-map' } },
+    { id: 'community', label: 'Community', icon: Megaphone,       path: '/dashboard/report', state: { viewMode: 'community' } },
+    { id: 'marketplace', label: 'Marketplace', icon: Store,       path: '/marketplace' },
+    { id: 'profile',   label: 'Profile',   icon: User,            path: '/profile' },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-3 sm:p-6 pt-6 relative font-sans flex flex-col items-center">
+    <div className="flex min-h-screen bg-[#111412] text-[#e2e3df] font-sans">
       
-      {/* Header */}
-      <header className="w-full flex items-center justify-between mb-8 max-w-5xl glass-panel px-4 py-3.5 sm:px-5 sm:py-4 rounded-2xl shadow-xl relative z-50">
-        <div 
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2.5 cursor-pointer select-none hover:opacity-90 active:scale-95 transition-all"
-        >
-          <img src={logo} className="w-7 h-7 sm:w-8 sm:h-8 filter drop-shadow-[0_0_6px_rgba(5,255,163,0.45)]" alt="CleanSweep Logo" />
-          <span className="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">CleanSweep</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => navigate('/profile')}
-            className="bg-slate-750 hover:bg-slate-700 text-slate-200 border border-slate-700/60 font-bold py-1.5 px-3 sm:py-2 sm:px-4 rounded-xl flex items-center gap-1.5 transition cursor-pointer text-xs active:scale-95"
-          >
-            <User size={14} /> <span>My Profile</span>
-          </button>
-          <button 
+      {/* ── Sidebar Navigation ── */}
+      <aside className="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 z-40 py-6"
+        style={{ background: 'rgba(17,20,18,0.6)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRight: '1px solid rgba(65,238,194,0.15)' }}
+      >
+        {/* Brand */}
+        <div className="px-6 mb-10">
+          <div
             onClick={() => navigate('/')}
-            className="bg-slate-750 hover:bg-slate-700 text-slate-200 border border-slate-700/60 font-bold py-1.5 px-3 sm:py-2 sm:px-4 rounded-xl flex items-center gap-1.5 transition cursor-pointer text-xs active:scale-95"
+            className="flex items-center gap-2.5 cursor-pointer select-none hover:opacity-90 transition-all"
           >
-            <ArrowLeft size={14} /> <span className="hidden sm:inline">Back to Dashboard</span>
+            <img src={logo} className="w-7 h-7 filter drop-shadow-[0_0_8px_rgba(65,238,194,0.5)]" alt="CleanSweep" />
+            <span className="text-xl font-bold tracking-tight" style={{ color: '#41eec2', fontFamily: 'Sora, sans-serif' }}>CleanSweep</span>
+          </div>
+        </div>
+
+        {/* User identity */}
+        <div className="px-4 mb-8 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center border shrink-0"
+            style={{ background: 'rgba(65,238,194,0.1)', borderColor: 'rgba(65,238,194,0.3)' }}>
+            <User size={18} style={{ color: '#41eec2' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold truncate" style={{ color: '#41eec2' }}>{profile?.full_name || 'Civic Reporter'}</p>
+            <p className="text-[10px] uppercase tracking-widest truncate" style={{ color: '#c4c6cc' }}>{profile?.level || 'Bronze Eco-Warrior'}</p>
+          </div>
+        </div>
+
+        {/* Nav items */}
+        <nav className="flex-1 space-y-1 px-2">
+          {navItems.map(({ id, label, icon: Icon, path, state }) => {
+            const isActive = id === 'marketplace';
+            return (
+              <button
+                key={id}
+                onClick={() => navigate(path, { state })}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer text-left"
+                style={isActive ? {
+                  background: '#41eec2',
+                  color: '#002118',
+                  boxShadow: '0 0 15px rgba(65,238,194,0.4)',
+                } : {
+                  color: '#c4c6cc',
+                }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(65,238,194,0.1)'; e.currentTarget.style.color = '#41eec2'; }}}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#c4c6cc'; }}}
+              >
+                <Icon size={18} />
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>{label}</span>
+              </button>
+            );
+          })}
+
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer text-left"
+              style={{ color: '#c4c6cc' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(65,238,194,0.1)'; e.currentTarget.style.color = '#41eec2'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#c4c6cc'; }}
+            >
+              <ShieldCheck size={18} />
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>Admin</span>
+            </button>
+          )}
+        </nav>
+
+        {/* New Report CTA */}
+        <div className="px-4 mt-auto">
+          <button
+            onClick={() => navigate('/dashboard/report', { state: { viewMode: 'report' } })}
+            className="w-full py-3 rounded-lg font-bold text-sm transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-95"
+            style={{ background: '#41eec2', color: '#002118', boxShadow: '0 0 20px rgba(65,238,194,0.3)', fontFamily: 'Inter, sans-serif' }}
+          >
+            New Report
           </button>
         </div>
-      </header>
+      </aside>
 
-      {/* Main Grid Layout */}
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Left Column (Points Tracker & Tree Plantation Drives) */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
-          
-          {/* Points Dash Header Card */}
-          <div className="glass-panel p-6 rounded-3xl shadow-xl flex flex-wrap sm:flex-nowrap items-center justify-between gap-6 relative overflow-hidden">
-            {/* Background Glow */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl"></div>
+      {/* ── Main Canvas ── */}
+      <div className="flex-1 flex flex-col min-h-screen md:ml-64">
 
-            <div className="space-y-2.5">
-              <span className="text-[10px] font-black uppercase text-slate-450 tracking-wider bg-slate-855 px-3 py-1 rounded-full border border-slate-800">
-                Eco-Donations Dashboard
-              </span>
-              <h2 className="text-xl sm:text-2xl font-black text-white">Your CleanPoints Balance</h2>
-              
-              <div className="flex items-baseline gap-2 pt-1.5">
-                <span className="text-3xl sm:text-4xl font-black text-amber-400">
-                  🌟 {profile?.points || 0}
+        {/* ── Top App Bar ── */}
+        <header className="flex justify-between items-center px-6 py-4 w-full sticky top-0 z-55"
+          style={{ background: 'rgba(17,20,18,0.6)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(65,238,194,0.15)', boxShadow: '0 0 20px rgba(0,212,170,0.08)' }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex md:hidden items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+              <img src={logo} className="w-7 h-7 filter drop-shadow-[0_0_6px_rgba(65,238,194,0.45)]" alt="CleanSweep" />
+              <span className="text-lg font-bold" style={{ color: '#41eec2', fontFamily: 'Sora, sans-serif' }}>CleanSweep</span>
+            </div>
+            <h1 className="hidden md:block text-xl font-bold" style={{ color: '#41eec2', fontFamily: 'Sora, sans-serif', letterSpacing: '-0.01em' }}>
+              Marketplace
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {/* CleanPoints pill */}
+            {profile && (
+              <div className="hidden lg:flex items-center gap-2 px-4 py-1.5 rounded-full border"
+                style={{ background: 'rgba(30,32,30,0.4)', borderColor: 'rgba(65,238,194,0.2)' }}
+              >
+                <Award size={14} style={{ color: '#41eec2' }} />
+                <span className="text-xs font-bold" style={{ color: '#41eec2', fontFamily: 'Inter, sans-serif' }}>
+                  {profile.points || 0} CleanPoints
                 </span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase">points</span>
               </div>
-              <p className="text-slate-455 text-[10px] font-bold">
-                Your rank: <span className="text-emerald-400 capitalize">{profile?.level || 'Bronze Eco-Warrior'}</span>
+            )}
+
+            <button className="relative cursor-pointer hover:text-secondary transition-all p-2 rounded-full"
+              style={{ color: '#c4c6cc' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(65,238,194,0.1)'; e.currentTarget.style.color = '#41eec2'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#c4c6cc'; }}
+            >
+              <Bell size={18} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-secondary rounded-full border border-surface"></span>
+            </button>
+
+            {/* Profile Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer overflow-hidden"
+                style={{ borderColor: 'rgba(65,238,194,0.3)', background: 'rgba(65,238,194,0.1)' }}
+              >
+                <User size={17} style={{ color: '#41eec2' }} />
+              </button>
+
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-52 rounded-xl shadow-2xl z-[200] py-2 border"
+                  style={{ background: '#1a1c1a', borderColor: 'rgba(65,238,194,0.2)' }}>
+                  <div className="px-4 py-2 text-[10px] truncate border-b pb-2 mb-1" style={{ borderColor: 'rgba(65,238,194,0.1)', color: '#c4c6cc' }}>
+                    <span className="block font-bold text-white truncate">{profile?.full_name || 'Civic Reporter'}</span>
+                    <span className="block text-[8px] truncate mt-0.5" style={{ color: '#8e9196' }}>{session?.user?.email}</span>
+                    {profile && (
+                      <div className="mt-1.5 flex flex-col gap-0.5">
+                        <span className="text-[9px] font-extrabold" style={{ color: '#41eec2' }}>🌟 {profile.points || 0} CleanPoints</span>
+                        <span className="text-[8px] italic" style={{ color: '#68dbae' }}>{profile.level || 'Bronze Eco-Warrior'}</span>
+                      </div>
+                    )}
+                  </div>
+                  {isAdmin && (
+                    <button onClick={() => { setProfileOpen(false); navigate('/admin'); }}
+                      className="w-full text-left px-4 py-2 text-xs flex items-center gap-2 transition"
+                      style={{ color: '#41eec2' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(65,238,194,0.08)'}
+                      onMouseLeave={e => e.currentTarget.style.background = ''}
+                    >
+                      <ShieldCheck size={14} /> Admin Dashboard
+                    </button>
+                  )}
+                  <button onClick={() => { setProfileOpen(false); navigate('/profile'); }}
+                    className="w-full text-left px-4 py-2 text-xs flex items-center gap-2 transition"
+                    style={{ color: '#c4c6cc' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(65,238,194,0.08)'}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}
+                  >
+                    <User size={14} /> My Profile
+                  </button>
+                  <button onClick={() => { setProfileOpen(false); }}
+                    className="w-full text-left px-4 py-2 text-xs flex items-center gap-2 transition"
+                    style={{ color: '#c4c6cc' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(65,238,194,0.08)'}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}
+                  >
+                    <Store size={14} /> Marketplace
+                  </button>
+                  <hr className="my-1" style={{ borderColor: 'rgba(65,238,194,0.1)' }} />
+                  <button
+                    onClick={async () => { await supabase.auth.signOut(); navigate('/login'); }}
+                    className="w-full text-left px-4 py-2 text-xs text-red-400 flex items-center gap-2 transition"
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(65,238,194,0.08)'}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}
+                  >
+                    <X size={14} /> Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* ── Marketplace Content Canvas ── */}
+        <main className="flex-1 w-full px-4 sm:px-8 py-8 max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 pb-24 md:pb-12">
+          
+          {/* Left Column (Points Tracker & Tree Plantation Drives) */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            
+            {/* Points Dash Header Card */}
+            <div className="glass-panel p-6 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl"></div>
+
+              <div className="space-y-2.5">
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider bg-slate-900 px-3 py-1 rounded-full border border-white/5">
+                  Eco-Donations Dashboard
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black text-white" style={{ fontFamily: 'Sora, sans-serif' }}>Your CleanPoints Balance</h2>
+                
+                <div className="flex items-baseline gap-2 pt-1.5">
+                  <span className="text-3xl sm:text-4xl font-black text-amber-400" style={{ textShadow: '0 0 10px rgba(245,158,11,0.3)' }}>
+                    🌟 {profile?.points || 0}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">points</span>
+                </div>
+                <p className="text-slate-400 text-xs font-semibold">
+                  Your rank: <span className="text-[#41eec2] capitalize font-bold">{profile?.level || 'Bronze Eco-Warrior'}</span>
+                </p>
+              </div>
+
+              {/* Interactive 3D Coin Element */}
+              <ThreeCoin />
+            </div>
+
+            {/* Catalog Title */}
+            <div className="space-y-1">
+              <h3 className="font-extrabold text-sm text-white uppercase tracking-wider flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
+                <Leaf className="text-[#41eec2]" size={16} /> Tree Plantation Drives
+              </h3>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                Clean Sweep partners with local municipal crews in Lucknow to plant native trees. Redeem your points to plant a tree on your behalf—absolutely free, with no monetary transactions involved.
               </p>
             </div>
 
-            {/* Interactive 3D Coin Element */}
-            <ThreeCoin />
-          </div>
+            {/* Tree Catalog Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {treeCatalog.map((item) => (
+                <div key={item.id} className="glass-panel glass-hover bg-gradient-to-b from-slate-900/30 to-slate-900/10 rounded-2xl p-4 flex flex-col justify-between shadow-lg transition-all duration-300 group">
+                  <div>
+                    <div className="relative h-28 w-full rounded-xl overflow-hidden bg-slate-950 flex-shrink-0">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                      <span className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-sm border border-slate-700/60 text-amber-400 text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-0.5">
+                        🌟 {item.points} pts
+                      </span>
+                    </div>
 
-          {/* Catalog Title */}
-          <div className="space-y-1">
-            <h3 className="font-extrabold text-sm text-slate-200 uppercase tracking-wider flex items-center gap-2">
-              <Leaf className="text-emerald-400" size={16} /> Tree Plantation Drives
-            </h3>
-            <p className="text-[10px] text-slate-400">
-              Clean Sweep partners with local municipal crews in Lucknow to plant native trees. Redeem your points to plant a tree on your behalf—absolutely free, with no monetary transactions involved.
-            </p>
-          </div>
-
-          {/* Tree Catalog Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {treeCatalog.map((item) => (
-              <div key={item.id} className="glass-panel glass-hover bg-gradient-to-b from-slate-800/30 to-slate-900/30 rounded-2xl p-4 flex flex-col gap-3 shadow-lg transition-all duration-300 group">
-                <div className="relative h-28 w-full rounded-xl overflow-hidden bg-slate-900 flex-shrink-0">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
-                  <span className="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-sm border border-slate-700 text-amber-400 text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-0.5">
-                    🌟 {item.points} pts
-                  </span>
-                </div>
-
-                <div className="space-y-1 flex-1">
-                  <h3 className="font-extrabold text-xs text-white group-hover:text-emerald-400 transition">
-                    {item.name}
-                  </h3>
-                  <p className="text-slate-455 text-[10px] leading-relaxed">
-                    {item.description}
-                  </p>
-                  <span className="block text-[8px] font-black text-slate-500 uppercase pt-1">
-                    📍 Plant Site: <span className="text-slate-300">{item.location}</span>
-                  </span>
-                </div>
-
-                <button
-                  onClick={() => setPlantingTree(item)}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs py-2.5 rounded-xl transition duration-200 cursor-pointer text-center active:scale-95 shadow-lg shadow-emerald-950/40"
-                >
-                  Plant Tree on My Behalf
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right Column (Trash Collectors Directory) */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
-          
-          <div className="glass-panel p-5 rounded-3xl shadow-xl space-y-4">
-            <div className="border-b border-slate-700/60 pb-3 flex items-center gap-2">
-              <Store className="text-emerald-450" size={18} />
-              <h2 className="font-extrabold text-sm text-white">Local Waste Collectors</h2>
-            </div>
-            
-            <p className="text-[10px] text-slate-400 leading-relaxed">
-              Contact licensed local recyclers in Lucknow to pick up sorted plastic, metal, and glass recyclables directly from your location.
-            </p>
-
-            <div className="space-y-3">
-              {collectors.map((c, idx) => (
-                <div key={idx} className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 flex flex-col gap-2.5 hover:border-slate-700 transition">
-                  <div className="flex items-center gap-3">
-                    <img src={c.image} alt={c.name} className="w-10 h-10 rounded-full border border-slate-700 object-cover" />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-[11px] text-white truncate">{c.name}</h4>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <Star size={10} className="text-yellow-400 fill-current" />
-                        <span className="text-[10px] text-slate-400 font-semibold">{c.rating}</span>
-                      </div>
+                    <div className="space-y-1 mt-3">
+                      <h3 className="font-extrabold text-xs text-white group-hover:text-[#41eec2] transition">
+                        {item.name}
+                      </h3>
+                      <p className="text-on-surface-variant text-[11px] leading-relaxed">
+                        {item.description}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-1">
-                    {c.specialties.map((s, j) => (
-                      <span key={j} className="bg-slate-800 border border-slate-750 text-[9px] font-bold text-slate-300 px-1.5 py-0.5 rounded">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-2 border-t border-slate-850 pt-2.5">
-                    <a
-                      href={`tel:${c.phone}`}
-                      className="flex-1 bg-slate-800 hover:bg-slate-750 border border-slate-700 rounded-lg py-1.5 flex items-center justify-center gap-1 text-[9px] font-bold text-white transition text-center cursor-pointer"
-                    >
-                      <Phone size={10} /> Call
-                    </a>
+                  <div className="space-y-3 mt-4 pt-3 border-t border-slate-800">
+                    <span className="block text-[8px] font-black text-slate-500 uppercase">
+                      📍 Plant Site: <span className="text-slate-300 tracking-wide">{item.location}</span>
+                    </span>
                     <button
-                      onClick={() => alert(`Contacting ${c.name} via MessageBoard. Connection complete.`)}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 rounded-lg py-1.5 flex items-center justify-center gap-1 text-[9px] font-bold text-white transition cursor-pointer"
+                      onClick={() => setPlantingTree(item)}
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs py-2.5 rounded-xl transition duration-200 cursor-pointer text-center active:scale-95 shadow-lg shadow-emerald-950/40"
                     >
-                      <MessageSquare size={10} /> Msg
+                      Plant Tree on My Behalf
                     </button>
                   </div>
                 </div>
@@ -322,7 +460,91 @@ export default function Marketplace() {
             </div>
           </div>
 
-        </div>
+          {/* Right Column (Trash Collectors Directory) */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            
+            <div className="glass-panel p-5 rounded-2xl shadow-xl space-y-4">
+              <div className="border-b border-slate-800 pb-3 flex items-center gap-2">
+                <Store className="text-[#41eec2]" size={18} />
+                <h2 className="font-extrabold text-sm text-white" style={{ fontFamily: 'Sora, sans-serif' }}>Local Waste Collectors</h2>
+              </div>
+              
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                Contact licensed local recyclers in Lucknow to pick up sorted plastic, metal, and glass recyclables directly from your location.
+              </p>
+
+              <div className="space-y-3">
+                {collectors.map((c, idx) => (
+                  <div key={idx} className="bg-slate-900/60 border border-white/5 rounded-xl p-3.5 flex flex-col gap-2.5 hover:border-slate-800 transition">
+                    <div className="flex items-center gap-3">
+                      <img src={c.image} alt={c.name} className="w-10 h-10 rounded-full border border-slate-800 object-cover" />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-[11px] text-white truncate">{c.name}</h4>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Star size={10} className="text-yellow-400 fill-current" />
+                          <span className="text-[10px] text-slate-400 font-semibold">{c.rating}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1">
+                      {c.specialties.map((s, j) => (
+                        <span key={j} className="bg-slate-800 border border-slate-750 text-[9px] font-bold text-slate-350 px-1.5 py-0.5 rounded">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2 border-t border-slate-850 pt-2.5">
+                      <a
+                        href={`tel:${c.phone}`}
+                        className="flex-1 bg-slate-800 hover:bg-slate-750 border border-slate-700 rounded-lg py-1.5 flex items-center justify-center gap-1 text-[9px] font-bold text-white transition text-center cursor-pointer"
+                      >
+                        <Phone size={10} /> Call
+                      </a>
+                      <button
+                        onClick={() => alert(`Contacting ${c.name} via MessageBoard. Connection complete.`)}
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 rounded-lg py-1.5 flex items-center justify-center gap-1 text-[9px] font-bold text-white transition cursor-pointer"
+                      >
+                        <MessageSquare size={10} /> Msg
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </main>
+
+        {/* ── Mobile Bottom Navigation (Matching DashboardOverview/Home) ── */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-between items-center px-6 py-3 z-50"
+          style={{ background: 'rgba(17,20,18,0.85)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(65,238,194,0.15)' }}
+        >
+          {[
+            { label: 'Report', icon: Camera, action: () => navigate('/dashboard/report', { state: { viewMode: 'report' } }) },
+            { label: 'Map', icon: Map, action: () => navigate('/dashboard/report', { state: { viewMode: 'explore-map' } }) },
+            { label: '', icon: Plus, action: () => navigate('/dashboard/report', { state: { viewMode: 'report' } }), isCenter: true },
+            { label: 'Social', icon: Megaphone, action: () => navigate('/dashboard/report', { state: { viewMode: 'community' } }) },
+            { label: 'Profile', icon: User, action: () => navigate('/profile'), isActive: false },
+          ].map(({ label, icon: Icon, action, isCenter, isActive }, i) => (
+            <button
+              key={i}
+              onClick={action}
+              className="flex flex-col items-center gap-1 transition-all"
+              style={isCenter ? {
+                width: 48, height: 48, borderRadius: '50%', background: '#41eec2',
+                color: '#002118', boxShadow: '0 0 15px rgba(65,238,194,0.5)', marginTop: -20,
+                display: 'flex', alignItems: 'center', justify: 'center'
+              } : { 
+                color: isActive ? '#41eec2' : '#c4c6cc'
+              }}
+            >
+              <Icon size={isCenter ? 22 : 20} />
+              {label && <span className="text-[10px] font-bold">{label}</span>}
+            </button>
+          ))}
+        </nav>
 
       </div>
 
@@ -336,12 +558,12 @@ export default function Marketplace() {
 
             <div className="space-y-1.5">
               <h3 className="font-extrabold text-sm sm:text-base text-white">Confirm Tree Donation</h3>
-              <p className="text-[10px] text-slate-400 leading-relaxed">
+              <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
                 Do you want to request planting a <b>{plantingTree.name}</b> in <b>{plantingTree.location}</b>?
               </p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-750 p-3 rounded-xl flex justify-between text-xs font-bold">
+            <div className="bg-slate-950 border border-white/5 p-3 rounded-xl flex justify-between text-xs font-bold">
               <span className="text-slate-400">Deduction Cost:</span>
               <span className="text-amber-400">🌟 {plantingTree.points} pts</span>
             </div>
@@ -349,13 +571,13 @@ export default function Marketplace() {
             <div className="flex gap-2.5 pt-1">
               <button
                 onClick={() => setPlantingTree(null)}
-                className="flex-1 bg-slate-700 hover:bg-slate-650 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer"
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePlantConfirm}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer shadow-lg shadow-emerald-950/40"
               >
                 Confirm
               </button>
@@ -369,25 +591,25 @@ export default function Marketplace() {
         <div className="fixed inset-0 z-[7000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="glass-modal border border-slate-700 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl relative overflow-hidden">
             {/* Top green ribbon overlay */}
-            <div className="absolute top-0 inset-x-0 h-2 bg-emerald-500"></div>
+            <div className="absolute top-0 inset-x-0 h-1 bg-[#41eec2]"></div>
 
-            <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-full bg-[#41eec2]/10 text-[#41eec2] flex items-center justify-center mx-auto">
               <CheckCircle2 size={32} />
             </div>
 
             <div className="space-y-1.5">
               <h3 className="font-extrabold text-sm sm:text-base text-white">Tree Planted on Your Behalf!</h3>
-              <p className="text-[10px] text-slate-400 leading-relaxed">
+              <p className="text-[10px] text-slate-450 leading-relaxed font-semibold">
                 Thank you! We have registered your tree planting contribution. A certified native <b>{successTree.name}</b> sapling will be planted in <b>{successTree.location}</b> during the next municipal planting drive.
               </p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-750 py-2.5 px-4 rounded-xl text-center">
+            <div className="bg-slate-950 border border-white/5 py-2.5 px-4 rounded-xl text-center">
               <span className="text-[10px] uppercase font-bold text-slate-500 block mb-0.5 tracking-wider">Plantation ID</span>
-              <span className="text-xs font-black text-emerald-400 font-mono tracking-widest">{certificateId}</span>
+              <span className="text-xs font-black text-[#41eec2] font-mono tracking-widest">{certificateId}</span>
             </div>
 
-            <p className="text-[8px] text-slate-500">
+            <p className="text-[8px] text-slate-500 font-semibold">
               * Progress updates and coordinates of your sapling will be emailed once planting is completed.
             </p>
 
@@ -396,7 +618,7 @@ export default function Marketplace() {
                 setSuccessTree(null);
                 setCertificateId(null);
               }}
-              className="w-full bg-slate-700 hover:bg-slate-650 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer"
+              className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer"
             >
               Close
             </button>
