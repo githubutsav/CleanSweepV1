@@ -184,7 +184,7 @@ export default function Profile() {
     <div className="min-h-screen bg-slate-900 text-white p-3 sm:p-6 pt-6 relative font-sans flex flex-col items-center">
       
       {/* Header */}
-      <header className="w-full flex items-center justify-between mb-8 max-w-5xl bg-slate-800/40 backdrop-blur border border-slate-700/50 px-4 py-3.5 sm:px-5 sm:py-4 rounded-2xl shadow-xl relative z-50">
+      <header className="w-full flex items-center justify-between mb-8 max-w-5xl glass-panel px-4 py-3.5 sm:px-5 sm:py-4 rounded-2xl shadow-xl relative z-50">
         <div 
           onClick={() => navigate('/')}
           className="flex items-center gap-2.5 cursor-pointer select-none hover:opacity-90 active:scale-95 transition-all"
@@ -208,7 +208,7 @@ export default function Profile() {
         <div className="lg:col-span-5 flex flex-col gap-6">
           
           {/* User Card */}
-          <div className="bg-gradient-to-b from-slate-800/40 to-slate-900/40 backdrop-blur border border-slate-700/50 p-6 rounded-3xl shadow-xl flex flex-col gap-5 relative overflow-hidden">
+          <div className="glass-panel p-6 rounded-3xl shadow-xl flex flex-col gap-5 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl"></div>
             
             <div className="flex items-center gap-4">
@@ -223,7 +223,7 @@ export default function Profile() {
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                       placeholder={profile?.full_name || 'Your Name'}
-                      className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-sm outline-none focus:border-emerald-500 text-white w-full"
+                      className="glass-input w-full px-2.5 py-1 rounded-lg text-sm text-white placeholder-slate-500"
                     />
                     <button 
                       onClick={handleSaveName}
@@ -281,7 +281,7 @@ export default function Profile() {
           </div>
 
           {/* Eco Achievements Grid */}
-          <div className="bg-slate-800/40 border border-slate-700/50 p-5 rounded-3xl shadow-xl space-y-4">
+          <div className="glass-panel p-5 rounded-3xl shadow-xl space-y-4">
             <h4 className="font-extrabold text-xs uppercase text-slate-400 tracking-wider flex items-center gap-2">
               <Award className="text-emerald-400" size={16} /> Eco Badges
             </h4>
@@ -334,7 +334,7 @@ export default function Profile() {
           </div>
 
           {/* Planted Trees Certificates */}
-          <div className="bg-slate-800/40 border border-slate-700/50 p-5 rounded-3xl shadow-xl space-y-3.5">
+          <div className="glass-panel p-5 rounded-3xl shadow-xl space-y-3.5">
             <h4 className="font-extrabold text-xs uppercase text-slate-400 tracking-wider flex items-center gap-2">
               <Leaf className="text-emerald-400" size={16} /> My Tree Certificates
             </h4>
@@ -369,7 +369,7 @@ export default function Profile() {
         <div className="lg:col-span-7 flex flex-col gap-6">
           
           {/* Submission history title & Filter */}
-          <div className="bg-slate-800/40 border border-slate-700/50 p-4 rounded-3xl flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between shadow-xl">
+          <div className="glass-panel p-4 rounded-3xl flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between shadow-xl">
             <h4 className="font-extrabold text-xs uppercase text-slate-350 tracking-wider flex items-center gap-2 px-1">
               <Clock className="text-emerald-400" size={16} /> My Reports History ({myReports.length})
             </h4>
@@ -420,7 +420,7 @@ export default function Profile() {
               </div>
             ) : (
               filteredReports.map((report) => (
-                <div key={report.id} className="bg-gradient-to-b from-slate-800/40 to-slate-900/40 border border-slate-700/40 rounded-3xl p-4 sm:p-5 shadow-xl space-y-4 hover:border-emerald-500/20 transition-all duration-300 animate-tab-transition">
+                <div key={report.id} className="glass-panel glass-hover rounded-3xl p-4 sm:p-5 shadow-xl space-y-4 animate-tab-transition">
                   <div className="flex justify-between items-start gap-2">
                     <div className="space-y-1">
                       <span className="text-[9px] font-bold text-slate-500 font-mono uppercase bg-slate-950 px-2 py-0.5 rounded border border-slate-850">

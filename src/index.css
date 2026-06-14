@@ -106,10 +106,79 @@
   transform: translateY(0);
 }
 
+/* ── Glassmorphism Design System ──────────────────────────────────────────── */
+
+/* Base glass card — used on Landing bento grid */
 .glass-card {
-  background: rgba(13, 27, 42, 0.6);
+  background: rgba(8, 18, 30, 0.55);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(65, 238, 194, 0.18);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(65, 238, 194, 0.05);
+}
+
+/* Rich panel — for dashboard & marketplace section cards */
+.glass-panel {
+  background: rgba(13, 27, 42, 0.52);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(65, 238, 194, 0.12);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Frosted header bar */
+.glass-header {
+  background: rgba(8, 18, 30, 0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid rgba(65, 238, 194, 0.12);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Frosted input field */
+.glass-input {
+  background: rgba(8, 18, 30, 0.6);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(65, 238, 194, 0.15);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.glass-input:focus {
+  border-color: rgba(65, 238, 194, 0.55);
+  box-shadow: 0 0 0 3px rgba(65, 238, 194, 0.12), 0 0 16px rgba(65, 238, 194, 0.08);
+  outline: none;
+}
+
+/* Modal overlay glass */
+.glass-modal {
+  background: rgba(8, 18, 30, 0.75);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(65, 238, 194, 0.2);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Ambient shimmer highlight on hover */
+.glass-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-hover:hover {
+  border-color: rgba(65, 238, 194, 0.35) !important;
+  box-shadow:
+    0 0 0 1px rgba(65, 238, 194, 0.15),
+    0 8px 32px rgba(65, 238, 194, 0.12),
+    0 0 60px rgba(65, 238, 194, 0.06);
+  transform: translateY(-1px);
 }
 
 .glow-hover {
@@ -122,6 +191,57 @@
 
 .btn-glow {
   box-shadow: 0 0 15px rgba(65, 238, 194, 0.4);
+}
+
+/* Ambient orb background decorations — place fixed in body/root */
+.glass-orb-1 {
+  position: fixed;
+  top: -20vh;
+  left: -10vw;
+  width: 55vw;
+  height: 55vw;
+  background: radial-gradient(circle, rgba(65, 238, 194, 0.055) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: orbDrift1 18s ease-in-out infinite alternate;
+}
+.glass-orb-2 {
+  position: fixed;
+  bottom: -20vh;
+  right: -10vw;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.045) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: orbDrift2 22s ease-in-out infinite alternate;
+}
+.glass-orb-3 {
+  position: fixed;
+  top: 40vh;
+  left: 30vw;
+  width: 40vw;
+  height: 40vw;
+  background: radial-gradient(circle, rgba(6, 78, 59, 0.04) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: orbDrift3 26s ease-in-out infinite alternate;
+}
+
+@keyframes orbDrift1 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(4vw, 6vh) scale(1.08); }
+}
+@keyframes orbDrift2 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(-5vw, -4vh) scale(1.12); }
+}
+@keyframes orbDrift3 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(3vw, -5vh) scale(0.94); }
 }
 
 .step-connector::after {

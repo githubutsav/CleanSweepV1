@@ -167,7 +167,7 @@ export default function Marketplace() {
     <div className="min-h-screen bg-slate-900 text-white p-3 sm:p-6 pt-6 relative font-sans flex flex-col items-center">
       
       {/* Header */}
-      <header className="w-full flex items-center justify-between mb-8 max-w-5xl bg-slate-800/40 backdrop-blur border border-slate-700/50 px-4 py-3.5 sm:px-5 sm:py-4 rounded-2xl shadow-xl relative z-50">
+      <header className="w-full flex items-center justify-between mb-8 max-w-5xl glass-panel px-4 py-3.5 sm:px-5 sm:py-4 rounded-2xl shadow-xl relative z-50">
         <div 
           onClick={() => navigate('/')}
           className="flex items-center gap-2.5 cursor-pointer select-none hover:opacity-90 active:scale-95 transition-all"
@@ -199,7 +199,7 @@ export default function Marketplace() {
         <div className="lg:col-span-8 flex flex-col gap-6">
           
           {/* Points Dash Header Card */}
-          <div className="bg-slate-800/40 backdrop-blur border border-slate-700/50 p-6 rounded-3xl shadow-xl flex flex-wrap sm:flex-nowrap items-center justify-between gap-6 relative overflow-hidden">
+          <div className="glass-panel p-6 rounded-3xl shadow-xl flex flex-wrap sm:flex-nowrap items-center justify-between gap-6 relative overflow-hidden">
             {/* Background Glow */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl"></div>
 
@@ -237,7 +237,7 @@ export default function Marketplace() {
           {/* Tree Catalog Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {treeCatalog.map((item) => (
-              <div key={item.id} className="bg-gradient-to-b from-slate-800/30 to-slate-900/30 border border-slate-700/40 hover:border-emerald-500/25 rounded-2xl p-4 flex flex-col gap-3 shadow-lg hover:shadow-emerald-950/10 transition-all duration-300 group">
+              <div key={item.id} className="glass-panel glass-hover bg-gradient-to-b from-slate-800/30 to-slate-900/30 rounded-2xl p-4 flex flex-col gap-3 shadow-lg transition-all duration-300 group">
                 <div className="relative h-28 w-full rounded-xl overflow-hidden bg-slate-900 flex-shrink-0">
                   <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
                   <span className="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-sm border border-slate-700 text-amber-400 text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-0.5">
@@ -271,7 +271,7 @@ export default function Marketplace() {
         {/* Right Column (Trash Collectors Directory) */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           
-          <div className="bg-slate-800/40 backdrop-blur border border-slate-700/50 p-5 rounded-3xl shadow-xl space-y-4">
+          <div className="glass-panel p-5 rounded-3xl shadow-xl space-y-4">
             <div className="border-b border-slate-700/60 pb-3 flex items-center gap-2">
               <Store className="text-emerald-450" size={18} />
               <h2 className="font-extrabold text-sm text-white">Local Waste Collectors</h2>
@@ -329,7 +329,7 @@ export default function Marketplace() {
       {/* Confirmation Modal */}
       {plantingTree && (
         <div className="fixed inset-0 z-[7000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+          <div className="glass-modal border border-slate-700 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
             <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto">
               <Leaf size={24} className="text-emerald-400" />
             </div>
@@ -367,7 +367,7 @@ export default function Marketplace() {
       {/* Success Certificate Modal */}
       {successTree && (
         <div className="fixed inset-0 z-[7000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl relative overflow-hidden">
+          <div className="glass-modal border border-slate-700 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl relative overflow-hidden">
             {/* Top green ribbon overlay */}
             <div className="absolute top-0 inset-x-0 h-2 bg-emerald-500"></div>
 

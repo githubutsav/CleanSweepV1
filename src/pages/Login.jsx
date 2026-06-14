@@ -103,8 +103,12 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Page-level glow accent behind card */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-[600px] h-[600px] rounded-full bg-emerald-500/5 blur-3xl" />
+      </div>
+      <div className="w-full max-w-md space-y-6 relative z-10">
 
         {/* Logo */}
         <div className="text-center">
@@ -116,7 +120,7 @@ export default function Login() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-slate-700/70 bg-slate-800/60 backdrop-blur p-7 shadow-2xl space-y-5">
+        <div className="glass-modal rounded-2xl p-7 shadow-2xl space-y-5">
           <h1 className="text-xl font-bold tracking-tight">
             {isRegistering ? 'Create an account' : 'Welcome back'}
           </h1>
@@ -133,7 +137,7 @@ export default function Login() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-lg text-sm outline-none transition"
+                    className="glass-input w-full pl-9 pr-3 py-2.5 rounded-lg text-sm text-white placeholder-slate-500"
                     placeholder="Your Name"
                   />
                 </div>
@@ -149,7 +153,7 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-lg text-sm outline-none transition"
+                  className="glass-input w-full pl-9 pr-3 py-2.5 rounded-lg text-sm text-white placeholder-slate-500"
                   placeholder="you@example.com"
                 />
               </div>
@@ -165,7 +169,7 @@ export default function Login() {
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-lg text-sm outline-none transition"
+                  className="glass-input w-full pl-9 pr-3 py-2.5 rounded-lg text-sm text-white placeholder-slate-500"
                   placeholder="Min. 6 characters"
                 />
               </div>
@@ -223,8 +227,6 @@ export default function Login() {
             </button>
           </div>
         </div>
-
-
       </div>
     </div>
   );

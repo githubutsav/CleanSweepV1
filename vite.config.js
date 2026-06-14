@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const portVal = env.Frontend_port || env.FRONTEND_PORT || env.VITE_FRONTEND_PORT || env.VITE_PORT
-  const port = portVal ? Number(portVal) : 3000
+  const port = portVal ? Number(portVal) : 8000
 
   return {
     plugins: [
