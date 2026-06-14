@@ -1235,202 +1235,228 @@ export default function Home({ session, isAdmin }) {
     : null;
 
   return (
-    <div className="flex flex-col min-h-screen items-center text-white bg-slate-900 p-3 sm:p-6 font-sans">
-      
-      {/* Header */}
-      <header className="w-full flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 max-w-4xl bg-slate-800/40 backdrop-blur border border-slate-700/50 px-4 py-3.5 sm:px-5 sm:py-4 rounded-2xl shadow-xl relative z-50">
-        <div className="flex items-center justify-between w-full md:w-auto">
-          <div 
+    <div className="flex min-h-screen bg-[#111412] text-[#e2e3df] font-sans overflow-x-hidden">
+
+      {/* ── Sidebar Navigation ── */}
+      <aside className="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 z-40 py-6"
+        style={{ background: 'rgba(17,20,18,0.6)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRight: '1px solid rgba(65,238,194,0.15)' }}
+      >
+        {/* Brand */}
+        <div className="px-6 mb-10">
+          <div
             onClick={() => navigate('/')}
-            className="flex items-center gap-2.5 cursor-pointer select-none hover:opacity-90 active:scale-95 transition-all"
+            className="flex items-center gap-2.5 cursor-pointer select-none hover:opacity-90 transition-all"
           >
-            <img src={logo} className="w-7 h-7 sm:w-8 sm:h-8 filter drop-shadow-[0_0_6px_rgba(5,255,163,0.45)]" alt="CleanSweep Logo" />
-            <span className="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">CleanSweep</span>
+            <img src={logo} className="w-7 h-7 filter drop-shadow-[0_0_8px_rgba(65,238,194,0.5)]" alt="CleanSweep" />
+            <span className="text-xl font-bold tracking-tight" style={{ color: '#41eec2', fontFamily: 'Sora, sans-serif' }}>CleanSweep</span>
           </div>
-          
-          {/* Mobile Profile & Marketplace Access (hidden on desktop) */}
-          <div className="flex items-center gap-2 md:hidden">
-            <button
-              onClick={() => navigate('/marketplace')}
-              className="bg-slate-750 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center text-slate-300 transition border border-slate-700/50 cursor-pointer"
-              title="Marketplace"
-            >
-              <Store size={14} />
-            </button>
-            {isAdmin && (
+        </div>
+
+        {/* User identity */}
+        <div className="px-4 mb-8 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center border shrink-0"
+            style={{ background: 'rgba(65,238,194,0.1)', borderColor: 'rgba(65,238,194,0.3)' }}>
+            <User size={18} style={{ color: '#41eec2' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold truncate" style={{ color: '#41eec2' }}>{profile?.full_name || 'Civic Reporter'}</p>
+            <p className="text-[10px] uppercase tracking-widest truncate" style={{ color: '#c4c6cc' }}>{profile?.level || 'Bronze Eco-Warrior'}</p>
+          </div>
+        </div>
+
+        {/* Nav items */}
+        <nav className="flex-1 space-y-1 px-2">
+          {[
+            { id: 'report', label: 'Report', icon: Camera },
+            { id: 'explore-map', label: 'Map', icon: Map },
+            { id: 'community', label: 'Community', icon: Megaphone },
+          ].map(({ id, label, icon: Icon }) => {
+            const isActive = viewMode === id;
+            return (
               <button
-                onClick={() => navigate('/admin')}
-                className="bg-emerald-850/80 hover:bg-emerald-800 w-8 h-8 rounded-full flex items-center justify-center text-white transition border border-emerald-600/50 cursor-pointer"
-                title="Admin Dashboard"
+                key={id}
+                onClick={() => { if (id === 'report') { setStep('camera'); } else { stopCamera(); } setViewMode(id); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer text-left"
+                style={isActive ? {
+                  background: '#41eec2',
+                  color: '#002118',
+                  boxShadow: '0 0 15px rgba(65,238,194,0.4)',
+                } : {
+                  color: '#c4c6cc',
+                }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(65,238,194,0.1)'; e.currentTarget.style.color = '#41eec2'; }}}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#c4c6cc'; }}}
               >
-                <ShieldCheck size={14} />
+                <Icon size={18} />
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>{label}</span>
               </button>
+            );
+          })}
+
+          <button
+            onClick={() => navigate('/marketplace')}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer text-left"
+            style={{ color: '#c4c6cc' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(65,238,194,0.1)'; e.currentTarget.style.color = '#41eec2'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#c4c6cc'; }}
+          >
+            <Store size={18} />
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>Marketplace</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/profile')}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer text-left"
+            style={{ color: '#c4c6cc' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(65,238,194,0.1)'; e.currentTarget.style.color = '#41eec2'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#c4c6cc'; }}
+          >
+            <User size={18} />
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>Profile</span>
+          </button>
+
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer text-left"
+              style={{ color: '#c4c6cc' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(65,238,194,0.1)'; e.currentTarget.style.color = '#41eec2'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#c4c6cc'; }}
+            >
+              <ShieldCheck size={18} />
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>Admin</span>
+            </button>
+          )}
+        </nav>
+
+        {/* New Report CTA */}
+        <div className="px-4 mt-auto">
+          <button
+            onClick={() => { setStep('camera'); setViewMode('report'); }}
+            className="w-full py-3 rounded-lg font-bold text-sm transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-95"
+            style={{ background: '#41eec2', color: '#002118', boxShadow: '0 0 20px rgba(65,238,194,0.3)', fontFamily: 'Inter, sans-serif' }}
+          >
+            New Report
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Main area (offset for sidebar on desktop) ── */}
+      <div className="flex-1 flex flex-col min-h-screen md:ml-64">
+
+        {/* ── Top App Bar ── */}
+        <header className="flex justify-between items-center px-6 py-4 w-full sticky top-0 z-50"
+          style={{ background: 'rgba(17,20,18,0.6)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(65,238,194,0.15)', boxShadow: '0 0 20px rgba(0,212,170,0.08)' }}
+        >
+          {/* Left: brand on mobile / tab title on desktop */}
+          <div className="flex items-center gap-4">
+            <div className="flex md:hidden items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+              <img src={logo} className="w-7 h-7 filter drop-shadow-[0_0_6px_rgba(65,238,194,0.45)]" alt="CleanSweep" />
+              <span className="text-lg font-bold" style={{ color: '#41eec2', fontFamily: 'Sora, sans-serif' }}>CleanSweep</span>
+            </div>
+            <h1 className="hidden md:block text-xl font-bold" style={{ color: '#41eec2', fontFamily: 'Sora, sans-serif', letterSpacing: '-0.01em' }}>
+              {viewMode === 'report' ? 'Interactive Report' : viewMode === 'explore-map' ? 'Explore Map' : 'Community Feed'}
+            </h1>
+          </div>
+
+          {/* Right: points + actions + avatar */}
+          <div className="flex items-center gap-4">
+            {/* CleanPoints pill (desktop) */}
+            {profile && (
+              <div className="hidden lg:flex items-center gap-2 px-4 py-1.5 rounded-full border"
+                style={{ background: 'rgba(30,32,30,0.4)', borderColor: 'rgba(65,238,194,0.2)' }}
+              >
+                <Award size={14} style={{ color: '#41eec2' }} />
+                <span className="text-xs font-bold" style={{ color: '#41eec2', fontFamily: 'Inter, sans-serif' }}>
+                  {profile.points || 0} CleanPoints
+                </span>
+              </div>
             )}
-            
-            {/* User Profile Menu on Mobile */}
+
+            {/* Mobile tab switcher */}
+            <div className="flex md:hidden bg-[#0c0f0d] border border-[#333533] p-0.5 rounded-full items-center gap-0.5">
+              {[
+                { id: 'report', icon: Camera },
+                { id: 'explore-map', icon: Map },
+                { id: 'community', icon: Megaphone },
+              ].map(({ id, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => { if (id === 'report') setStep('camera'); else stopCamera(); setViewMode(id); }}
+                  className="p-2 rounded-full transition-all duration-200 cursor-pointer"
+                  style={viewMode === id ? { background: '#41eec2', color: '#002118' } : { color: '#c4c6cc' }}
+                >
+                  <Icon size={14} />
+                </button>
+              ))}
+            </div>
+
+            {/* Profile dropdown */}
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 border-2 border-slate-500 transition shadow cursor-pointer text-white"
+                className="w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer overflow-hidden"
+                style={{ borderColor: 'rgba(65,238,194,0.3)', background: 'rgba(65,238,194,0.1)' }}
               >
-                <User size={15} />
+                <User size={17} style={{ color: '#41eec2' }} />
               </button>
+
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50 py-2">
-                  <div className="px-4 py-2 text-slate-400 text-[10px] truncate border-b border-slate-700/60 pb-2 mb-1">
+                <div className="absolute right-0 mt-2 w-52 rounded-xl shadow-2xl z-[200] py-2 border"
+                  style={{ background: '#1a1c1a', borderColor: 'rgba(65,238,194,0.2)' }}>
+                  <div className="px-4 py-2 text-[10px] truncate border-b pb-2 mb-1" style={{ borderColor: 'rgba(65,238,194,0.1)', color: '#c4c6cc' }}>
                     <span className="block font-bold text-white truncate">{profile?.full_name || 'Civic Reporter'}</span>
-                    <span className="block text-slate-550 text-[8px] truncate mt-0.5">{session?.user?.email}</span>
+                    <span className="block text-[8px] truncate mt-0.5" style={{ color: '#8e9196' }}>{session?.user?.email}</span>
                     {profile && (
                       <div className="mt-1.5 flex flex-col gap-0.5">
-                        <span className="text-[9px] text-amber-400 font-extrabold">🌟 {profile.points || 0} Points</span>
-                        <span className="text-[8px] text-emerald-400 italic">{profile.level || 'Bronze Eco-Warrior'}</span>
+                        <span className="text-[9px] font-extrabold" style={{ color: '#41eec2' }}>🌟 {profile.points || 0} CleanPoints</span>
+                        <span className="text-[8px] italic" style={{ color: '#68dbae' }}>{profile.level || 'Bronze Eco-Warrior'}</span>
                       </div>
                     )}
                   </div>
                   {isAdmin && (
-                    <button
-                      onClick={() => { setProfileOpen(false); navigate('/admin'); }}
-                      className="w-full text-left px-4 py-2 hover:bg-slate-700/60 text-xs text-emerald-450 flex items-center gap-2"
+                    <button onClick={() => { setProfileOpen(false); navigate('/admin'); }}
+                      className="w-full text-left px-4 py-2 text-xs flex items-center gap-2 transition"
+                      style={{ color: '#41eec2' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(65,238,194,0.08)'}
+                      onMouseLeave={e => e.currentTarget.style.background = ''}
                     >
                       <ShieldCheck size={14} /> Admin Dashboard
                     </button>
                   )}
-                  <button
-                    onClick={() => { setProfileOpen(false); navigate('/profile'); }}
-                    className="w-full text-left px-4 py-2 hover:bg-slate-700/60 text-xs flex items-center gap-2"
+                  <button onClick={() => { setProfileOpen(false); navigate('/profile'); }}
+                    className="w-full text-left px-4 py-2 text-xs flex items-center gap-2 transition"
+                    style={{ color: '#c4c6cc' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(65,238,194,0.08)'}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}
                   >
                     <User size={14} /> My Profile
                   </button>
-                  <button
-                    onClick={() => { setProfileOpen(false); navigate('/marketplace'); }}
-                    className="w-full text-left px-4 py-2 hover:bg-slate-700/60 text-xs flex items-center gap-2"
+                  <button onClick={() => { setProfileOpen(false); navigate('/marketplace'); }}
+                    className="w-full text-left px-4 py-2 text-xs flex items-center gap-2 transition"
+                    style={{ color: '#c4c6cc' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(65,238,194,0.08)'}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}
                   >
                     <Store size={14} /> Marketplace
                   </button>
-                  <hr className="border-slate-700 my-1" />
+                  <hr className="my-1" style={{ borderColor: 'rgba(65,238,194,0.1)' }} />
                   <button
-                    onClick={async () => {
-                      await supabase.auth.signOut();
-                      navigate('/login');
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-slate-700/60 text-xs text-red-400 flex items-center gap-2"
+                    onClick={async () => { await supabase.auth.signOut(); navigate('/login'); }}
+                    className="w-full text-left px-4 py-2 text-xs text-red-400 flex items-center gap-2 transition"
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(65,238,194,0.08)'}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}
                   >
-                    <User size={14} /> Logout
+                    <X size={14} /> Logout
                   </button>
                 </div>
               )}
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Tab controls & desktop profile container */}
-        <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
-          {/* Segmented Controls for Tabs */}
-          <div className="flex bg-slate-900 border border-slate-750 p-1 rounded-full items-center gap-1 shadow-inner w-full md:w-auto justify-around sm:justify-start">
-            <button
-              onClick={() => { setStep('camera'); setViewMode('report'); }}
-              className={`flex-1 sm:flex-initial flex justify-center px-3.5 py-1.5 rounded-full items-center gap-1.5 font-bold transition text-[10px] sm:text-xs ${
-                viewMode === 'report' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Camera size={13} /> <span>Report</span>
-            </button>
-            <button
-              onClick={() => { stopCamera(); setViewMode('explore-map'); }}
-              className={`flex-1 sm:flex-initial flex justify-center px-3.5 py-1.5 rounded-full items-center gap-1.5 font-bold transition text-[10px] sm:text-xs ${
-                viewMode === 'explore-map' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Map size={13} /> <span>Explore Map</span>
-            </button>
-            <button
-              onClick={() => { stopCamera(); setViewMode('community'); }}
-              className={`flex-1 sm:flex-initial flex justify-center px-3.5 py-1.5 rounded-full items-center gap-1.5 font-bold transition text-[10px] sm:text-xs ${
-                viewMode === 'community' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Megaphone size={13} /> <span>Community</span>
-            </button>
-          </div>
-
-          {/* Desktop Marketplace & Admin & Profile Buttons */}
-          <div className="hidden md:flex items-center gap-2">
-            <button
-              onClick={() => navigate('/marketplace')}
-              className="bg-slate-750 hover:bg-slate-700 px-4 py-2 rounded-full flex items-center gap-2 font-semibold transition text-xs border border-slate-700/60 cursor-pointer"
-            >
-              <Store size={14} /> Marketplace
-            </button>
-
-            {isAdmin && (
-              <button
-                onClick={() => navigate('/admin')}
-                className="bg-emerald-700 hover:bg-emerald-650 px-4 py-2 rounded-full flex items-center gap-1.5 font-bold transition text-xs border border-emerald-650 cursor-pointer"
-              >
-                <ShieldCheck size={14} /> Admin
-              </button>
-            )}
-
-            {/* Desktop User Profile Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-700 hover:bg-slate-600 border-2 border-slate-500 transition shadow cursor-pointer text-white"
-              >
-                <User size={20} />
-              </button>
-
-              {profileOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50 py-2">
-                  <div className="px-4 py-2 text-slate-400 text-[10px] truncate border-b border-slate-700/60 pb-2 mb-1">
-                    <span className="block font-bold text-white truncate">{profile?.full_name || 'Civic Reporter'}</span>
-                    <span className="block text-slate-550 text-[8px] truncate mt-0.5">{session?.user?.email}</span>
-                    {profile && (
-                      <div className="mt-1.5 flex flex-col gap-0.5">
-                        <span className="text-[9px] text-amber-400 font-extrabold">🌟 {profile.points || 0} Points</span>
-                        <span className="text-[8px] text-emerald-400 italic">{profile.level || 'Bronze Eco-Warrior'}</span>
-                      </div>
-                    )}
-                  </div>
-                  {isAdmin && (
-                    <button
-                      onClick={() => { setProfileOpen(false); navigate('/admin'); }}
-                      className="w-full text-left px-4 py-2 hover:bg-slate-700/60 text-xs text-emerald-450 flex items-center gap-2"
-                    >
-                      <ShieldCheck size={14} /> Admin Dashboard
-                    </button>
-                  )}
-                  <button
-                    onClick={() => { setProfileOpen(false); navigate('/profile'); }}
-                    className="w-full text-left px-4 py-2 hover:bg-slate-700/60 text-xs flex items-center gap-2"
-                  >
-                    <User size={14} /> My Profile
-                  </button>
-                  <button
-                    onClick={() => { setProfileOpen(false); navigate('/marketplace'); }}
-                    className="w-full text-left px-4 py-2 hover:bg-slate-700/60 text-xs flex items-center gap-2"
-                  >
-                    <Store size={14} /> Marketplace
-                  </button>
-                  <hr className="border-slate-700 my-1" />
-                  <button
-                    onClick={async () => {
-                      await supabase.auth.signOut();
-                      navigate('/login');
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-slate-700/60 text-xs text-red-400 flex items-center gap-2"
-                  >
-                    <User size={14} /> Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main content */}
-      <main className="w-full max-w-3xl flex flex-col items-center px-2">
+        {/* ── Page content ── */}
+        <main className="flex-1 px-4 sm:px-6 py-8 w-full max-w-4xl mx-auto flex flex-col items-center">
 
         {/* ── MODE: FILE REPORT ────────────────────────────────────────── */}
         {viewMode === 'report' && (
@@ -2521,8 +2547,7 @@ export default function Home({ session, isAdmin }) {
 
           </div>
         </div>
-      )}
-
+      )}\r\n\r\n      </div>
     </div>
   );
 }
