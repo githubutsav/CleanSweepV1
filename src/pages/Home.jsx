@@ -2642,301 +2642,378 @@ export default function Home({ session, isAdmin }) {
 
         {/* ── MODE: COMMUNITY FEED ───────────────────────────────────────── */}
         {viewMode === 'community' && (
-          <div className="w-full space-y-6 animate-tab-transition">
-            <div className="text-center max-w-md mx-auto space-y-2">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center justify-center gap-2">
-                <Megaphone className="text-emerald-400 animate-pulse" size={24} /> Civic Action Community
-              </h1>
-              <p className="text-slate-400 text-xs sm:text-sm">
-                Join others in raising voices against garbage. Upvote dump reports to prioritize them, and discuss cleaning schedules.
-              </p>
-            </div>
-
-            {/* Community Stats & Leaderboard Grid */}
-            {(() => {
-              const totalCleanupsCommunity = allReports.filter(r => r.status === 'done').length;
-              const totalTreesPlantedCommunity = totalCleanupsCommunity + 8;
-              const nextForestMilestone = totalTreesPlantedCommunity < 15 ? 15 : totalTreesPlantedCommunity < 30 ? 30 : 50;
-
-              return (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 w-full">
-                  
-                  {/* Leaderboard Card */}
-                  <div className="md:col-span-5 bg-slate-800/40 backdrop-blur border border-slate-700/50 p-5 rounded-3xl shadow-xl flex flex-col gap-3.5">
-                    <h4 className="font-extrabold text-[10px] uppercase text-slate-400 tracking-wider flex items-center gap-2">
-                      <Award className="text-amber-400" size={15} /> Eco Leaderboard
-                    </h4>
+          <div className="w-full animate-tab-transition">
+            
+            {/* Page Content Canvas */}
+            <div className="flex-1 w-full pt-4">
+              {/* Hero Bento Section */}
+              <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
+                {/* Civic Action Hero */}
+                <div className="lg:col-span-8 bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-[2rem] p-6 sm:p-8 relative overflow-hidden group shadow-2xl">
+                  <div className="relative z-10">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-secondary/10 rounded-full border border-secondary/20 mb-4">
+                      <span className="material-symbols-outlined text-[16px] text-secondary">campaign</span>
+                      <span className="text-[10px] font-bold text-secondary uppercase tracking-[0.2em]">Community Objective</span>
+                    </div>
+                    <h1 className="font-headline-xl text-3xl sm:text-5xl font-bold mb-4 text-on-surface leading-tight">Civic Action Community</h1>
+                    <p className="text-on-surface-variant max-w-xl text-sm sm:text-base mb-8">Join others in raising voices against garbage. Upvote dump reports to prioritize them and discuss cleaning schedules.</p>
                     
-                    <div className="space-y-2.5">
-                      {topContributors.map((user, idx) => (
-                        <div key={idx} className="flex items-center justify-between bg-slate-900/60 border border-slate-850/60 p-2.5 rounded-2xl">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className={`font-black text-xs w-4 text-center shrink-0 ${idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-slate-300' : idx === 2 ? 'text-amber-600' : 'text-slate-500'}`}>
-                              #{idx + 1}
-                            </span>
-                            <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${getAvatarGradient(user.full_name)} flex items-center justify-center font-bold text-[10px] text-white shrink-0 border border-slate-750`}>
-                              {user.full_name.slice(0, 2).toUpperCase()}
+                    {/* Community Progress */}
+                    {(() => {
+                      const totalCleanupsCommunity = allReports.filter(r => r.status === 'done').length;
+                      const totalTreesPlantedCommunity = totalCleanupsCommunity + 8;
+                      const nextForestMilestone = totalTreesPlantedCommunity < 15 ? 15 : totalTreesPlantedCommunity < 30 ? 30 : 50;
+
+                      return (
+                        <div className="bg-surface-container/60 p-6 rounded-2xl border border-secondary/5">
+                          <div className="flex justify-between items-end mb-3">
+                            <div>
+                              <span className="text-secondary font-bold text-4xl">{totalTreesPlantedCommunity}</span>
+                              <span className="text-on-surface-variant font-label-sm ml-1 uppercase text-[10px] font-bold">Trees Planted</span>
                             </div>
-                            <div className="min-w-0">
-                              <span className="font-bold text-xs block text-slate-200 truncate">{user.full_name}</span>
-                              <span className="text-[8px] text-slate-450 italic block truncate">{user.level}</span>
-                            </div>
+                            <span className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider">Next milestone: {nextForestMilestone} trees</span>
                           </div>
-                          <span className="font-black text-xs text-emerald-450 shrink-0">🌟 {user.points} pts</span>
+                          <div className="h-3 w-full bg-primary-container rounded-full overflow-hidden border border-secondary/10">
+                            <div 
+                              className="h-full bg-gradient-to-r from-on-tertiary-container to-secondary shadow-[0_0_10px_rgba(65,238,194,0.5)] transition-all duration-700"
+                              style={{ width: `${Math.min(100, (totalTreesPlantedCommunity / nextForestMilestone) * 100)}%` }}
+                            ></div>
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })()}
                   </div>
-
-                  {/* Milestones Card */}
-                  <div className="md:col-span-7 bg-slate-800/40 backdrop-blur border border-slate-700/50 p-5 rounded-3xl shadow-xl flex flex-col justify-between gap-4 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl"></div>
-                    
-                    <h4 className="font-extrabold text-[10px] uppercase text-slate-400 tracking-wider flex items-center gap-2">
-                      <Leaf className="text-emerald-400 animate-pulse" size={15} /> Community Eco Impact
-                    </h4>
-
-                    <div className="grid grid-cols-2 gap-4 h-full items-center">
-                      <div className="bg-slate-900/60 border border-slate-850/60 p-4 rounded-2xl flex flex-col justify-center items-center text-center gap-1.5 h-full">
-                        <span className="text-2xl font-black text-white">🌳 {totalTreesPlantedCommunity}</span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase">Trees Planted</span>
-                      </div>
-                      <div className="bg-slate-900/60 border border-slate-850/60 p-4 rounded-2xl flex flex-col justify-center items-center text-center gap-1.5 h-full">
-                        <span className="text-2xl font-black text-emerald-400">✓ {totalCleanupsCommunity}</span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase">Sites Cleaned</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex justify-between items-center text-[10px] font-bold text-slate-450">
-                        <span>Next community forest milestone:</span>
-                        <span className="text-emerald-450 font-black">{totalTreesPlantedCommunity}/{nextForestMilestone} trees</span>
-                      </div>
-                      <div className="w-full bg-slate-950 rounded-full h-2 border border-slate-850 overflow-hidden p-0.5">
-                        <div 
-                          className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-700" 
-                          style={{ width: `${Math.min(100, (totalTreesPlantedCommunity / nextForestMilestone) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
                 </div>
-              );
-            })()}
 
-            {/* Sorting & Area Filter Controls */}
-            <div className="bg-slate-800/40 backdrop-blur border border-slate-700/50 p-4 sm:p-5 rounded-3xl shadow-lg flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">Sort:</span>
-                <button
-                  onClick={() => setCommunitySort('latest')}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition duration-200 cursor-pointer ${
-                    communitySort === 'latest' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200'
-                  }`}
-                >
-                  Latest
-                </button>
-                <button
-                  onClick={() => setCommunitySort('voices')}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition duration-200 flex items-center justify-center gap-1 cursor-pointer ${
-                    communitySort === 'voices' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200'
-                  }`}
-                >
-                  <Megaphone size={12} /> Priority Voices
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="text-[10px] uppercase font-black tracking-wider text-slate-400 shrink-0">Region:</span>
-                <select 
-                  value={communityArea}
-                  onChange={(e) => setCommunityArea(e.target.value)}
-                  className="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs font-bold focus:outline-none focus:border-emerald-500 text-white w-full sm:w-44 cursor-pointer"
-                >
-                  <option value="__all__">All Regions</option>
-                  {uniqueMunicipalities.map((name) => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Community Feed List */}
-            <div className="space-y-6 w-full">
-              {loadingReports ? (
-                <div className="text-center py-16 text-slate-500 animate-pulse text-sm">Loading feed reports...</div>
-              ) : communityReports.length === 0 ? (
-                <div className="text-center py-20 text-slate-500 text-sm">No reports filed in this area yet. Be the first to report!</div>
-              ) : (
-                communityReports.map((report) => {
-                  const hasUpvoted = upvotedIds.includes(report.id);
-                  const isCommentsOpen = expandedComments[report.id];
-                  
+                {/* Global Stats Card */}
+                {(() => {
+                  const totalCleanupsCommunity = allReports.filter(r => r.status === 'done').length;
+                  const totalUsers = Math.max(12, Object.keys(allReports.reduce((acc, r) => { acc[r.user_email] = true; return acc; }, {})).length);
                   return (
-                    <div key={report.id} className="bg-gradient-to-b from-slate-800/40 to-slate-900/40 backdrop-blur-md border border-slate-700/40 rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4 hover:border-emerald-500/20 transition-all duration-300 animate-tab-transition">
-                      
-                      {/* Card Header */}
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          {/* Colorful avatar based on user hash */}
-                          <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getAvatarGradient(getAnonymizedUser(report.user_email || report.user_id))} flex items-center justify-center font-black text-xs text-white shadow-md border border-slate-700/50 shrink-0`}>
-                            {getAnonymizedUser(report.user_email || report.user_id).slice(0, 2).toUpperCase()}
+                    <div className="lg:col-span-4 flex flex-col gap-6">
+                      <div className="bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-[2rem] p-6 sm:p-8 flex-1 flex flex-col justify-center shadow-2xl border-t-secondary/20">
+                        <div className="flex items-center gap-4 mb-6">
+                          <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center border border-secondary/20 text-secondary">
+                            <span className="material-symbols-outlined">check_circle</span>
                           </div>
-                          <div className="min-w-0">
-                            <span className="text-xs font-extrabold text-slate-200 block truncate">
-                              {getAnonymizedUser(report.user_email || report.user_id)}
-                            </span>
-                            <span className="text-[10px] text-slate-400 block truncate font-medium">
-                              📍 {report.municipal_name || ' Lucknow'}
-                            </span>
+                          <div>
+                            <h3 className="font-headline-md text-2xl font-bold text-on-surface">{totalCleanupsCommunity}</h3>
+                            <p className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider">Total Sites Cleaned</p>
                           </div>
                         </div>
-
-                        <div className="text-right shrink-0">
-                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full capitalize block w-fit ml-auto mb-1 ${
-                            report.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-550/20' : 
-                            report.status === 'cleared_by_admin' ? 'bg-blue-500/10 text-blue-400 border border-blue-550/20' :
-                            report.status === 'done' ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-550/20' : 
-                            'bg-slate-750 text-slate-400'
-                          }`}>
-                            {report.status === 'pending' ? 'Pending Cleanup' : 
-                             report.status === 'cleared_by_admin' ? 'Awaiting Confirm' : 
-                             report.status === 'done' ? 'Confirmed Clean' : report.status}
-                          </span>
-                          <span className="text-[9px] text-slate-500 block font-mono">
-                            {new Date(report.timestamp).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
-                          </span>
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center border border-secondary/20 text-secondary">
+                            <span className="material-symbols-outlined">group_add</span>
+                          </div>
+                          <div>
+                            <h3 className="font-headline-md text-2xl font-bold text-on-surface">{totalUsers * 10}+</h3>
+                            <p className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider">Active Guardians</p>
+                          </div>
                         </div>
                       </div>
-
-                      {/* Image Media */}
-                      {report.image_url && (
-                        <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-slate-855 shadow-inner group">
-                          <img src={report.image_url} alt="Garbage Dump" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        </div>
-                      )}
-
-                      {/* Reporter's Note */}
-                      {report.description && (
-                        <div className="bg-slate-900/60 border border-slate-850 p-4 rounded-2xl text-xs text-slate-200 leading-relaxed italic relative pl-9 pr-6 shadow-inner">
-                          <span className="absolute left-3 top-3 text-emerald-450 text-xl font-bold not-italic">“</span>
-                          {report.description}
-                          <span className="absolute right-3 bottom-0.5 text-emerald-450 text-xl font-bold not-italic">”</span>
-                        </div>
-                      )}
-
-                      {/* Location details */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-400 bg-slate-955/40 p-3 rounded-2xl border border-slate-855">
-                        <div className="flex items-center gap-2 font-medium">
-                          <MapPin size={13} className="text-emerald-400 shrink-0" />
-                          <span className="text-[10px] sm:text-[11px] font-mono tracking-tight text-slate-300">
-                            {report.latitude.toFixed(5)}, {report.longitude.toFixed(5)}
-                          </span>
-                        </div>
-                        
-                        <button 
-                          onClick={() => handleOpenMap(report)}
-                          className="w-full sm:w-auto text-emerald-400 hover:text-emerald-300 font-bold flex items-center justify-center gap-1.5 py-1 px-3 bg-emerald-955/20 border border-emerald-500/20 hover:border-emerald-500/40 rounded-lg transition duration-200 text-[11px] cursor-pointer"
-                        >
-                          <Eye size={12} /> View on Map
-                        </button>
-                      </div>
-
-                      {/* Bottom Social Action Bar */}
-                      <div className="flex items-center gap-3 pt-1">
-                        <button
-                          onClick={() => handleRaiseVoice(report.id)}
-                          disabled={hasUpvoted}
-                          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition duration-200 cursor-pointer ${
-                            hasUpvoted 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 cursor-not-allowed shadow-inner' 
-                              : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 shadow-md hover:border-slate-600'
-                          }`}
-                        >
-                          <Megaphone size={14} className={hasUpvoted ? 'text-emerald-400 animate-pulse' : 'text-slate-400'} />
-                          <span>{hasUpvoted ? 'Voice Raised' : 'Raise Voice'}</span>
-                          <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black ${hasUpvoted ? 'bg-emerald-500/20 text-emerald-355' : 'bg-slate-800 text-slate-400'}`}>
-                            {report.upvotes || 0}
-                          </span>
-                        </button>
-
-                        <button
-                          onClick={() => toggleComments(report.id)}
-                          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border transition duration-200 cursor-pointer ${
-                            isCommentsOpen
-                              ? 'bg-slate-800 text-white border-slate-600'
-                              : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-600'
-                          }`}
-                        >
-                          <MessageSquare size={14} className={isCommentsOpen ? 'text-emerald-400' : 'text-slate-400'} />
-                          <span>Discussion</span>
-                          <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black ${isCommentsOpen ? 'bg-slate-700 text-white' : 'bg-slate-800 text-slate-400'}`}>
-                            {report.comments?.length || 0}
-                          </span>
-                        </button>
-                      </div>
-
-                      {/* Collapsible Discussion threads */}
-                      {isCommentsOpen && (
-                        <div className="border-t border-slate-755 pt-4 space-y-4 animate-slide-down">
-                          <div className="max-h-56 overflow-y-auto space-y-3 pr-1 scrollbar-thin scrollbar-thumb-slate-800">
-                            {(!report.comments || report.comments.length === 0) ? (
-                              <div className="flex flex-col items-center justify-center py-6 text-slate-550 space-y-1">
-                                <MessageSquare size={18} className="text-slate-600 animate-pulse" />
-                                <p className="text-[10px] font-medium">No comments yet. Start the conversation!</p>
-                              </div>
-                            ) : (
-                              report.comments.map((comment, index) => (
-                                <div key={index} className="bg-slate-900/40 p-3 rounded-2xl border border-slate-850 flex gap-3 items-start hover:bg-slate-900/60 transition-all">
-                                  {/* Minimal avatar for comment */}
-                                  <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${getAvatarGradient(getAnonymizedUser(comment.user))} flex items-center justify-center font-black text-[9px] text-white shrink-0 shadow-sm border border-slate-800`}>
-                                    {getAnonymizedUser(comment.user).slice(0, 2).toUpperCase()}
-                                  </div>
-                                  <div className="flex-1 space-y-0.5">
-                                    <div className="flex justify-between items-center">
-                                      <span className="font-bold text-[10px] text-slate-300">{getAnonymizedUser(comment.user)}</span>
-                                      <span className="text-[8px] text-slate-500 font-mono">{new Date(comment.timestamp).toLocaleDateString()}</span>
-                                    </div>
-                                    <p className="text-[11px] text-slate-200 leading-relaxed">{comment.text}</p>
-                                  </div>
-                                </div>
-                              ))
-                            )}
-                          </div>
-
-                          {/* Write Comment Box */}
-                          <div className="flex gap-2 items-center bg-slate-900/80 p-1.5 rounded-xl border border-slate-800 focus-within:border-emerald-500/50 transition duration-200">
-                            <input 
-                              type="text"
-                              placeholder="Write a message..."
-                              value={commentInputs[report.id] || ''}
-                              onChange={(e) => setCommentInputs(prev => ({ ...prev, [report.id]: e.target.value }))}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleAddFeedComment(report.id);
-                              }}
-                              className="flex-1 bg-transparent px-3 py-2 text-xs outline-none text-white placeholder-slate-500"
-                            />
-                            <button
-                              onClick={() => handleAddFeedComment(report.id)}
-                              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs p-2.5 rounded-lg transition shrink-0 cursor-pointer shadow flex items-center justify-center"
-                              title="Send Comment"
-                            >
-                              <Send size={12} />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
+                      <button 
+                        onClick={() => setViewMode('report')}
+                        className="bg-secondary text-on-secondary font-bold py-6 rounded-2xl flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(65,238,194,0.2)] hover:shadow-[0_0_40px_rgba(65,238,194,0.4)] transition-all transform hover:-translate-y-1 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined">auto_awesome</span>
+                        Start Cleanup Campaign
+                      </button>
                     </div>
                   );
-                })
-              )}
+                })()}
+              </section>
+
+              {/* Leaderboard & Impact Feed Grid */}
+              <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* Left: Leaderboard */}
+                <aside className="lg:col-span-4 bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-[2rem] p-6 sm:p-8 shadow-2xl">
+                  <div className="flex items-center justify-between mb-8">
+                    <h3 className="font-headline-md text-xl font-bold text-on-surface flex items-center gap-2">
+                      <span className="material-symbols-outlined text-secondary">emoji_events</span>
+                      Eco Leaderboard
+                    </h3>
+                  </div>
+                  <div className="space-y-6">
+                    {topContributors.map((user, idx) => (
+                      <div key={idx} className="flex items-center gap-4 group">
+                        <div className={`font-stats-lg w-8 text-center italic font-bold text-lg ${idx === 0 ? 'text-secondary opacity-100' : 'text-secondary opacity-30 group-hover:opacity-100 transition-opacity'}`}>
+                          #{idx + 1}
+                        </div>
+                        <div className={`w-12 h-12 rounded-full border-2 p-0.5 ${idx === 0 ? 'border-secondary' : idx === 1 ? 'border-secondary/50' : 'border-secondary/30'}`}>
+                          <div className={`w-full h-full rounded-full bg-gradient-to-br ${getAvatarGradient(user.full_name)} flex items-center justify-center font-bold text-xs text-white`}>
+                            {user.full_name.slice(0, 2).toUpperCase()}
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-on-surface text-sm truncate">{user.full_name}</div>
+                          <div className="text-[10px] text-on-surface-variant uppercase italic truncate">{user.level}</div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-secondary font-bold text-sm">{user.points}</div>
+                          <div className="text-[10px] text-on-surface-variant">pts</div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <div className="h-px bg-secondary/10 my-4"></div>
+                    
+                    {/* Your Rank */}
+                    <div className="flex items-center gap-4 bg-secondary/5 p-4 rounded-xl border border-secondary/15 ring-1 ring-secondary/5">
+                      <div className="font-bold text-on-surface w-8 text-center italic text-lg">#{topContributors.length + 5}</div>
+                      <div className="w-10 h-10 rounded-full border-2 border-secondary/80 p-0.5">
+                        <div className={`w-full h-full rounded-full bg-gradient-to-br ${getAvatarGradient(session?.user?.email || 'User')} flex items-center justify-center font-bold text-[10px] text-white`}>
+                          {(profile?.full_name || session?.user?.email || 'User').slice(0, 2).toUpperCase()}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-on-surface text-sm truncate">{profile?.full_name || session?.user?.email || 'You'}</div>
+                        <div className="text-[10px] text-on-surface-variant uppercase italic truncate">Community Member</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-secondary font-bold text-sm">{profile?.points || '--'}</div>
+                        <div className="text-[10px] text-on-surface-variant">pts</div>
+                      </div>
+                    </div>
+                  </div>
+                </aside>
+
+                {/* Right: Global Impact Feed */}
+                <div className="lg:col-span-8 flex flex-col gap-6">
+                  
+                  {/* Feed Header / Filters */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 px-2">
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setCommunitySort('latest')}
+                        className={`px-4 sm:px-6 py-2 rounded-full font-bold text-[10px] sm:text-xs tracking-wider uppercase transition-all cursor-pointer ${
+                          communitySort === 'latest' 
+                            ? 'bg-secondary text-on-secondary' 
+                            : 'bg-primary-container/40 text-on-surface-variant hover:text-secondary border border-secondary/10'
+                        }`}
+                      >
+                        Latest
+                      </button>
+                      <button 
+                        onClick={() => setCommunitySort('voices')}
+                        className={`px-4 sm:px-6 py-2 rounded-full font-bold text-[10px] sm:text-xs tracking-wider uppercase transition-all cursor-pointer ${
+                          communitySort === 'voices' 
+                            ? 'bg-secondary text-on-secondary' 
+                            : 'bg-primary-container/40 text-on-surface-variant hover:text-secondary border border-secondary/10'
+                        }`}
+                      >
+                        Priority Voices
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 sm:gap-4 bg-primary-container/40 px-3 sm:px-4 py-2 rounded-full border border-secondary/10">
+                      <span className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider shrink-0">Region:</span>
+                      <select 
+                        value={communityArea}
+                        onChange={(e) => setCommunityArea(e.target.value)}
+                        className="bg-transparent border-none text-on-surface focus:ring-0 cursor-pointer font-bold text-[10px] sm:text-xs py-0 pr-6 appearance-none outline-none"
+                      >
+                        <option value="__all__">All Districts</option>
+                        {uniqueMunicipalities.map((name) => (
+                          <option key={name} value={name}>{name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Feed Items */}
+                  <div className="space-y-6">
+                    {loadingReports ? (
+                      <div className="text-center py-16 text-on-surface-variant animate-pulse text-sm">Loading feed reports...</div>
+                    ) : communityReports.length === 0 ? (
+                      <div className="text-center py-20 text-on-surface-variant text-sm">No reports filed in this area yet. Be the first to report!</div>
+                    ) : (
+                      communityReports.map((report) => {
+                        const hasUpvoted = upvotedIds.includes(report.id);
+                        const isCommentsOpen = expandedComments[report.id];
+                        
+                        return (
+                          <article key={report.id} className="bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-[2rem] overflow-hidden group shadow-xl">
+                            
+                            {/* Card Header */}
+                            <div className="p-4 sm:p-6 flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row">
+                              <div className="flex items-center gap-4 w-full sm:w-auto">
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold text-sm sm:text-base border shrink-0 ${
+                                  report.status === 'pending' ? 'bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30' :
+                                  report.status === 'cleared_by_admin' ? 'bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/30' :
+                                  'bg-secondary/20 text-secondary border-secondary/30'
+                                }`}>
+                                  {getAnonymizedUser(report.user_email || report.user_id).slice(0, 2).toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                  <h4 className="font-bold text-sm sm:text-base text-on-surface truncate">{getAnonymizedUser(report.user_email || report.user_id)}</h4>
+                                  <p className="text-[10px] sm:text-xs text-on-surface-variant flex items-center mt-0.5">
+                                    <span className="material-symbols-outlined text-[14px] text-secondary mr-1 shrink-0">location_on</span>
+                                    <span className="truncate">{report.municipal_name || 'Lucknow Municipal Corporation'}</span>
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-left sm:text-right shrink-0">
+                                <span className={`px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase border ${
+                                  report.status === 'pending' ? 'bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30' : 
+                                  report.status === 'cleared_by_admin' ? 'bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/30' :
+                                  'bg-secondary/20 text-secondary border-secondary/30'
+                                }`}>
+                                  {report.status === 'pending' ? 'Pending Cleanup' : 
+                                   report.status === 'cleared_by_admin' ? 'Awaiting Confirm' : 
+                                   report.status === 'done' ? 'Confirmed Clean' : report.status}
+                                </span>
+                                <p className="text-[9px] sm:text-[10px] text-on-surface-variant mt-1.5 font-mono">
+                                  {new Date(report.timestamp).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Image Media */}
+                            <div className="px-4 sm:px-6 pb-2">
+                              <div className="aspect-video w-full rounded-2xl overflow-hidden border border-secondary/10 group-hover:border-secondary/30 transition-all relative bg-surface-container">
+                                {report.image_url ? (
+                                  <img 
+                                    src={report.image_url} 
+                                    alt="Garbage Dump" 
+                                    className="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition-all duration-500" 
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-on-surface-variant">
+                                    <span className="material-symbols-outlined text-4xl">broken_image</span>
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent"></div>
+                                <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 flex justify-between items-center">
+                                  <div className="px-2 sm:px-3 py-1 bg-surface/80 backdrop-blur-md rounded-full text-[10px] sm:text-xs font-mono border border-white/10 text-on-surface shadow-md">
+                                    {report.latitude.toFixed(5)}, {report.longitude.toFixed(5)}
+                                  </div>
+                                  <button 
+                                    onClick={() => handleOpenMap(report)}
+                                    className="bg-secondary text-on-secondary px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-[10px] sm:text-xs shadow-xl flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                                  >
+                                    <span className="material-symbols-outlined text-[14px] sm:text-[18px]">map</span>
+                                    <span className="hidden sm:inline">View on Map</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Actions & Interactions */}
+                            <div className="p-4 sm:p-6 grid grid-cols-2 gap-3 sm:gap-4">
+                              <button 
+                                onClick={() => handleRaiseVoice(report.id)}
+                                disabled={hasUpvoted}
+                                className={`flex items-center justify-center gap-2 sm:gap-3 py-2.5 sm:py-3 rounded-xl font-bold transition-all group/btn active:scale-95 cursor-pointer text-xs sm:text-sm ${
+                                  hasUpvoted
+                                    ? 'bg-secondary/10 border border-secondary/30 text-secondary shadow-[0_0_15px_rgba(65,238,194,0.2)]'
+                                    : 'bg-primary-container/40 border border-secondary/10 text-on-surface-variant hover:text-secondary hover:border-secondary/30'
+                                }`}
+                              >
+                                <span className="material-symbols-outlined group-hover/btn:scale-110 transition-transform text-[18px]">
+                                  {hasUpvoted ? 'campaign' : 'campaign'}
+                                </span>
+                                <span className="truncate">{hasUpvoted ? 'Raised Voice' : 'Raise Voice'}</span>
+                                <span className={`px-1.5 sm:px-2 rounded ml-0.5 sm:ml-1 text-[10px] sm:text-xs ${hasUpvoted ? 'bg-secondary/30 text-secondary' : 'bg-surface-container-high'}`}>
+                                  {report.upvotes || 0}
+                                </span>
+                              </button>
+                              
+                              <button 
+                                onClick={() => setExpandedComments(prev => ({ ...prev, [report.id]: !prev[report.id] }))}
+                                className={`flex items-center justify-center gap-2 sm:gap-3 py-2.5 sm:py-3 rounded-xl font-bold transition-all active:scale-95 cursor-pointer text-xs sm:text-sm ${
+                                  isCommentsOpen
+                                    ? 'bg-primary-container/60 border border-secondary/20 text-on-surface'
+                                    : 'bg-primary-container/40 border border-secondary/10 text-on-surface-variant hover:text-on-surface'
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-[18px]">forum</span>
+                                <span className="truncate">Discussion</span>
+                                <span className="bg-surface-container-high px-1.5 sm:px-2 rounded ml-0.5 sm:ml-1 text-[10px] sm:text-xs">
+                                  {report.comments?.length || 0}
+                                </span>
+                              </button>
+                            </div>
+
+                            {/* Discussion Thread */}
+                            {isCommentsOpen && (
+                              <div className="px-4 sm:px-6 pb-6 pt-0 animate-slide-down">
+                                <div className="bg-primary-container/20 border border-secondary/10 rounded-2xl p-4 space-y-4">
+                                  
+                                  {/* Comments List */}
+                                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                    {!report.comments || report.comments.length === 0 ? (
+                                      <div className="text-center text-[10px] sm:text-xs text-on-surface-variant py-4 italic">
+                                        No comments yet. Start the discussion!
+                                      </div>
+                                    ) : (
+                                      report.comments.map((comment, idx) => (
+                                        <div key={idx} className="flex gap-3 bg-surface-container/50 p-3 rounded-xl border border-secondary/5">
+                                          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarGradient(comment.user)} flex items-center justify-center text-white font-bold text-[10px] shrink-0`}>
+                                            {getAnonymizedUser(comment.user).slice(0, 2).toUpperCase()}
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-baseline mb-1">
+                                              <span className="text-[10px] font-bold text-on-surface">{getAnonymizedUser(comment.user)}</span>
+                                              <span className="text-[8px] sm:text-[9px] text-on-surface-variant font-mono">
+                                                {comment.timestamp ? new Date(comment.timestamp).toLocaleDateString() : 'Just now'}
+                                              </span>
+                                            </div>
+                                            <p className="text-[10px] sm:text-xs text-on-surface-variant leading-relaxed break-words">{comment.text}</p>
+                                          </div>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+
+                                  {/* Write Comment Box */}
+                                  <form 
+                                    onSubmit={(e) => { e.preventDefault(); handleAddFeedComment(report.id); }}
+                                    className="flex gap-2 items-center bg-surface-container-high/50 p-1.5 rounded-xl border border-secondary/20 focus-within:border-secondary transition-all"
+                                  >
+                                    <input 
+                                      type="text"
+                                      placeholder="Write a message..."
+                                      value={commentInputs[report.id] || ''}
+                                      onChange={(e) => setCommentInputs(prev => ({ ...prev, [report.id]: e.target.value }))}
+                                      className="flex-1 bg-transparent px-3 py-2 text-xs sm:text-sm outline-none text-on-surface placeholder-on-surface-variant"
+                                    />
+                                    <button
+                                      type="submit"
+                                      disabled={!commentInputs[report.id]?.trim()}
+                                      className="bg-secondary hover:bg-secondary-container text-on-secondary font-bold p-2.5 rounded-lg transition-all shrink-0 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                      title="Send Comment"
+                                    >
+                                      <span className="material-symbols-outlined text-[16px]">send</span>
+                                    </button>
+                                  </form>
+                                </div>
+                              </div>
+                            )}
+
+                          </article>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Pagination / Load More */}
+                  {communityReports.length > 0 && (
+                    <div className="flex justify-center py-6">
+                      <button className="px-8 py-3 bg-primary-container/40 text-on-surface-variant rounded-full border border-secondary/10 hover:text-secondary hover:border-secondary/40 transition-all font-bold text-xs cursor-pointer shadow-lg">
+                        Load More Activities
+                      </button>
+                    </div>
+                  )}
+
+                </div>
+              </section>
             </div>
 
+            {/* Atmospheric Background Element */}
+            <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-secondary/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
           </div>
         )}
-
         <canvas ref={canvasRef} className="hidden" />
       </main>
 
@@ -2986,7 +3063,9 @@ export default function Home({ session, isAdmin }) {
 
           </div>
         </div>
-      )}\r\n\r\n      </div>
+      )}
+
+      </div>
     </div>
   );
 }
