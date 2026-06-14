@@ -336,23 +336,7 @@ export default function DashboardOverview({ session, isAdmin }) {
               </div>
             )}
 
-            {/* Actions */}
-            <button
-              className="p-2 rounded-full transition-all"
-              style={{ color: '#c4c6cc' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(65,238,194,0.1)'; e.currentTarget.style.color = '#41eec2'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#c4c6cc'; }}
-            >
-              <Bell size={18} />
-            </button>
-            <button
-              className="p-2 rounded-full transition-all"
-              style={{ color: '#c4c6cc' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(65,238,194,0.1)'; e.currentTarget.style.color = '#41eec2'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#c4c6cc'; }}
-            >
-              <Search size={18} />
-            </button>
+
 
             {/* Profile avatar */}
             <div className="relative">
