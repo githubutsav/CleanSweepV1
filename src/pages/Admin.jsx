@@ -630,11 +630,8 @@ export default function Admin({ session }) {
     try {
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          id: session.user.id,
-          full_name: profileName,
-          updated_at: new Date().toISOString()
-        }, { onConflict: ['id'] });
+        .update({ full_name: profileName })
+        .eq('id', session.user.id);
 
       if (error) throw error;
       setProfileMsg('✅ Profile updated successfully!');

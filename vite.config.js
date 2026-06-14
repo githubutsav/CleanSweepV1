@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon-180x180.png'],
+        // Raise Workbox precache limit to 5 MB to accommodate large bundles
+        workbox: {
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        },
         manifest: {
           name: 'CleanSweep',
           short_name: 'CleanSweep',
@@ -57,8 +61,8 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
-          // Modern Rolldown chunk-splitting configuration
-          advancedChunks: {
+          // Modern Rolldown code-splitting (replaces deprecated advancedChunks)
+          codeSplitting: {
             groups: [
               {
                 name: 'react-vendor',
@@ -66,21 +70,24 @@ export default defineConfig(({ mode }) => {
               },
               {
                 name: 'supabase-vendor',
-                test: /\/node_modules\/@supabase\/@supabase-js\//,
+                test: /\/node_modules\/@supabase\//,
               },
               {
                 name: 'map-vendor',
                 test: /\/node_modules\/(leaflet|react-leaflet)\//,
               },
               {
+                name: 'three-vendor',
+                test: /\/node_modules\/(three|globe\.gl)\//,
+              },
+              {
                 name: 'store-vendor',
                 test: /\/node_modules\/zustand\//,
-              }
-            ]
-          }
+              },
+            ],
+          },
         },
       },
     },
   }
 })
-
