@@ -1209,21 +1209,38 @@ export default function Home({ session, isAdmin }) {
     }
 
     displayReports.forEach((r) => {
-      const color = r.status === 'pending' ? '#ef4444' : 
-                    r.status === 'cleared_by_admin' ? '#3b82f6' : '#10b981';
-      
-      const pinSvg = `
-        <svg viewBox="0 0 24 30" width="28" height="36" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12,2 C6.48,2 2,6.48 2,12 C2,17.4 12,27 12,27 C12,27 22,17.4 22,12 C22,6.48 17.52,2 12,2 Z" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>
-          <circle cx="12" cy="10" r="4.5" fill="#ffffff"/>
-        </svg>
-      `;
+      const isPending = r.status === 'pending';
+      const isClearedAdmin = r.status === 'cleared_by_admin';
+      const isDone = r.status === 'done';
+
+      let pinHtml = '';
+      if (isPending) {
+        pinHtml = `
+          <div class="relative group cursor-pointer z-10">
+            <div class="w-4 h-4 bg-[#ef4444] rounded-full relative z-10 shadow-[0_0_15px_#ef4444]"></div>
+            <div class="absolute inset-0 w-4 h-4 bg-[#ef4444] rounded-full animate-ping opacity-75"></div>
+          </div>
+        `;
+      } else if (isClearedAdmin) {
+        pinHtml = `
+          <div class="relative group cursor-pointer z-10">
+            <div class="w-4 h-4 bg-[#3b82f6] rounded-full relative z-10 shadow-[0_0_15px_#3b82f6]"></div>
+            <div class="absolute inset-0 w-4 h-4 bg-[#3b82f6] rounded-full animate-pulse opacity-75"></div>
+          </div>
+        `;
+      } else {
+        pinHtml = `
+          <div class="relative group cursor-pointer z-10">
+            <div class="w-3 h-3 border-2 border-secondary rounded-full relative z-10 bg-surface"></div>
+          </div>
+        `;
+      }
 
       const customIcon = L.divIcon({
-        html: pinSvg,
-        className: 'custom-area-marker',
-        iconSize: [28, 36],
-        iconAnchor: [14, 36]
+        html: pinHtml,
+        className: 'custom-neon-marker bg-transparent border-none',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
       });
 
       L.marker([r.latitude, r.longitude], { icon: customIcon })
@@ -1552,7 +1569,7 @@ export default function Home({ session, isAdmin }) {
         </header>
 
         {/* ── Page content ── */}
-        <main className="flex-1 px-4 sm:px-6 py-8 w-full max-w-4xl mx-auto flex flex-col items-center">
+        <main className={`flex-1 w-full flex flex-col ${viewMode === 'explore-map' ? 'relative overflow-hidden bg-background h-[calc(100vh-80px)] md:h-screen' : 'px-4 sm:px-6 py-8 max-w-4xl mx-auto items-center'}`}>
 
         {/* ── MODE: FILE REPORT ────────────────────────────────────────── */}
         {viewMode === 'report' && (
@@ -2237,390 +2254,389 @@ export default function Home({ session, isAdmin }) {
 
         {/* ── MODE: EXPLORE AREA MAP ─────────────────────────────────────── */}
         {viewMode === 'explore-map' && (
-          <div className="w-full space-y-4 animate-tab-transition flex flex-col">
-            <div className="text-center max-w-md mx-auto space-y-1">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-250 flex items-center justify-center gap-2">
-                <Map className="text-emerald-400" size={24} /> Explore Area Map
-              </h1>
-              <p className="text-slate-400 text-xs sm:text-sm">
-                Real-time garbage reports and cleaning progress across municipal areas.
-              </p>
+          <div className="absolute inset-0 flex-1 w-full h-full animate-tab-transition">
+            
+            {/* Immersive Leaflet Map Container */}
+            <div ref={areaMapContainerRef} className="absolute inset-0 z-0 bg-slate-950">
             </div>
 
-            {/* Immersive Google Maps Container */}
-            <div className="relative w-full h-[690px] sm:h-[750px] border border-slate-700/60 rounded-3xl overflow-hidden shadow-2xl bg-slate-950 flex flex-col z-10">
-              
-              {/* Leaflet Map Canvas */}
-              <div ref={areaMapContainerRef} className="w-full h-full z-0" />
 
-              {/* Floating Top Bar (Search + Geocoding) */}
-              <form 
-                onSubmit={handleMapSearch}
-                className="absolute top-4 left-4 z-20 w-80 max-w-[calc(100vw-32px)] bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl flex items-center px-3.5 py-2 transition-all focus-within:border-emerald-500"
+            {/* Map Controls (Left Bottom) */}
+            <div className="absolute left-6 bottom-24 sm:bottom-6 flex flex-col gap-2 z-20">
+              <button 
+                type="button"
+                onClick={() => areaMapRef.current?.zoomIn()}
+                className="w-10 h-10 bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-lg flex items-center justify-center text-secondary hover:bg-secondary/20 transition-all cursor-pointer shadow-[0_0_15px_rgba(65,238,194,0.1)]"
               >
-                <Search className="text-slate-400 flex-shrink-0" size={16} />
-                <input 
-                  type="text"
-                  placeholder="Search Lucknow areas, roads..."
-                  value={mapSearchQuery}
-                  onChange={(e) => setMapSearchQuery(e.target.value)}
-                  className="bg-transparent text-xs font-semibold text-white placeholder-slate-500 focus:outline-none flex-1 py-1 px-2.5"
-                />
-                {mapSearchQuery && (
-                  <button 
-                    type="button"
-                    onClick={() => { setMapSearchQuery(''); if (searchMarkerRef.current) searchMarkerRef.current.remove(); }}
-                    className="text-slate-450 hover:text-slate-200 p-1 flex-shrink-0"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-                <button 
-                  type="submit"
-                  disabled={mapSearchLoading}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ml-1 flex-shrink-0 flex items-center gap-1 active:scale-95 cursor-pointer"
-                >
-                  {mapSearchLoading ? (
-                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  ) : 'Search'}
-                </button>
-              </form>
-
-              {/* Floating Filter Pills / chips (top-center/left) */}
-              <div className="absolute top-18 sm:top-4 left-4 sm:left-[350px] z-20 flex flex-wrap items-center gap-1.5 max-w-[calc(100vw-40px)]">
-                {/* Region select pill */}
-                <div className="relative bg-slate-900/90 backdrop-blur-sm border border-slate-750 rounded-xl px-3 py-1.5 flex items-center gap-1 shadow-lg text-[10px] font-bold text-slate-200">
-                  <SlidersHorizontal size={11} className="text-slate-400" />
-                  <select 
-                    value={areaFilter}
-                    onChange={(e) => setAreaFilter(e.target.value)}
-                    className="bg-transparent text-slate-200 border-none outline-none focus:ring-0 cursor-pointer pr-1 py-0"
-                  >
-                    <option value="__all__" className="bg-slate-900 text-white">All Regions</option>
-                    {uniqueMunicipalities.map((name) => (
-                      <option key={name} value={name} className="bg-slate-900 text-white">{name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Status Chips */}
-                <button
-                  type="button"
-                  onClick={() => setAreaStatusFilter('active')}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all shadow-lg border flex items-center gap-1 cursor-pointer ${
-                    areaStatusFilter === 'active'
-                      ? 'bg-red-500/10 text-red-400 border-red-500/35 font-extrabold scale-102'
-                      : 'bg-slate-900/90 border-slate-750 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                  Active Dumps
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setAreaStatusFilter('awaiting_confirm')}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all shadow-lg border flex items-center gap-1 cursor-pointer ${
-                    areaStatusFilter === 'awaiting_confirm'
-                      ? 'bg-blue-500/10 text-blue-400 border-blue-500/35 font-extrabold scale-102'
-                      : 'bg-slate-900/90 border-slate-750 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                  Awaiting Confirm
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setAreaStatusFilter('cleared')}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all shadow-lg border flex items-center gap-1 cursor-pointer ${
-                    areaStatusFilter === 'cleared'
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/35 font-extrabold scale-102'
-                      : 'bg-slate-900/90 border-slate-750 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  Cleared
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setAreaStatusFilter('all')}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all shadow-lg border flex items-center gap-1 cursor-pointer ${
-                    areaStatusFilter === 'all'
-                      ? 'bg-slate-105 text-slate-900 border-white font-extrabold scale-102'
-                      : 'bg-slate-900/90 border-slate-750 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  All Statuses
-                </button>
-              </div>
-
-              {/* Floating Layer Styles Switcher (top-right) */}
-              <div className="absolute top-4 right-4 z-20 flex items-center bg-slate-900/90 backdrop-blur-sm border border-slate-750 p-1 rounded-xl shadow-lg">
-                <button
-                  type="button"
-                  onClick={() => setMapTileLayer('map')}
-                  className={`px-2.5 py-1 rounded-lg text-[9px] font-extrabold transition-all cursor-pointer ${
-                    mapTileLayer === 'map' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Map
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMapTileLayer('satellite')}
-                  className={`px-2.5 py-1 rounded-lg text-[9px] font-extrabold transition-all cursor-pointer ${
-                    mapTileLayer === 'satellite' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Satellite
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMapTileLayer('dark')}
-                  className={`px-2.5 py-1 rounded-lg text-[9px] font-extrabold transition-all cursor-pointer ${
-                    mapTileLayer === 'dark' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Dark
-                </button>
-              </div>
-
-              {/* Floating "Locate Me" Button (above zoom, bottom-right) */}
-              <button
+                <span className="material-symbols-outlined">add</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => areaMapRef.current?.zoomOut()}
+                className="w-10 h-10 bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-lg flex items-center justify-center text-secondary hover:bg-secondary/20 transition-all cursor-pointer shadow-[0_0_15px_rgba(65,238,194,0.1)]"
+              >
+                <span className="material-symbols-outlined">remove</span>
+              </button>
+              <button 
                 type="button"
                 onClick={handleLocateMe}
                 disabled={locatingUser}
-                className="absolute bottom-18 right-4 z-20 w-9 h-9 rounded-full bg-white hover:bg-slate-100 text-slate-800 flex items-center justify-center shadow-2xl border border-slate-200 transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                title="Zoom to my location"
+                className="w-10 h-10 bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-lg flex items-center justify-center text-secondary hover:bg-secondary/20 transition-all mt-2 cursor-pointer shadow-[0_0_15px_rgba(65,238,194,0.1)]"
               >
                 {locatingUser ? (
-                  <div className="w-4.5 h-4.5 border-2 border-blue-500/30 border-t-blue-600 rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin"></div>
                 ) : (
-                  <Locate size={18} className="text-blue-600" />
+                  <span className="material-symbols-outlined">my_location</span>
                 )}
               </button>
+            </div>
 
-              {/* Floating Bottom Stats Banner */}
-              <div className="absolute bottom-4 left-4 z-20 bg-slate-900/90 backdrop-blur-sm border border-slate-750 rounded-2xl px-4 py-2 flex items-center gap-4 text-[10px] font-extrabold shadow-lg">
-                <span className="flex items-center gap-1 text-slate-300">
-                  <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                  Active: <span className="text-white ml-0.5">{areaActiveCount}</span>
-                </span>
-                <span className="w-px h-3 bg-slate-755"></span>
-                <span className="flex items-center gap-1 text-slate-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Resolved: <span className="text-white ml-0.5">{areaClearedCount}</span>
-                </span>
+            {/* Right Floating Filter Sidebar */}
+            <div className="hidden sm:flex absolute right-6 top-6 bottom-6 w-80 bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-2xl flex-col z-20 overflow-hidden shadow-2xl">
+              <div className="p-6 border-b border-secondary/15">
+                <h3 className="font-headline-md text-headline-md text-on-surface mb-2">Map Filters</h3>
+                <p className="font-body-md text-body-md text-on-surface-variant text-sm">Targeted cleanup intelligence</p>
               </div>
-
-              {/* Google Maps style Side Details Drawer */}
-              {activeMapReport && (
-                <div className="absolute sm:top-4 sm:bottom-4 sm:left-4 bottom-0 left-0 right-0 z-30 sm:w-85 w-full bg-slate-900/95 backdrop-blur-md border sm:border-slate-700/80 border-t border-slate-700/80 sm:rounded-2xl rounded-t-3xl shadow-2xl flex flex-col overflow-hidden max-h-[75%] sm:max-h-[calc(100vh-250px)] max-w-full sm:max-w-[calc(100vw-32px)] transition-all duration-300 animate-slide-in-left">
-                  
-                  {/* Photo Header */}
-                  <div className="relative h-40 w-full bg-slate-950 flex-shrink-0">
-                    {activeMapReport.image_url ? (
-                      <img src={activeMapReport.image_url} alt="Garbage site" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-slate-500">
-                        <MapPin size={36} className="text-slate-600 mb-1" />
-                        <span className="text-[9px] uppercase tracking-wider font-bold">No Image Available</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-black/30"></div>
-                    
-                    {/* Close Button on image */}
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMapReport(null)}
-                      className="absolute top-3 right-3 bg-black/60 hover:bg-black/90 text-white rounded-full p-1.5 transition-all backdrop-blur-sm cursor-pointer"
-                    >
-                      <X size={14} />
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                
+                {/* Search */}
+                <div className="space-y-3">
+                  <label className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Location Search</label>
+                  <form onSubmit={handleMapSearch} className="relative">
+                    <input 
+                      type="text"
+                      placeholder="Search areas..."
+                      value={mapSearchQuery}
+                      onChange={(e) => setMapSearchQuery(e.target.value)}
+                      className="w-full bg-surface-container-high/50 border border-secondary/20 rounded-xl px-4 py-2 text-sm text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
+                    />
+                    <button type="submit" disabled={mapSearchLoading} className="absolute right-2 top-1/2 -translate-y-1/2 text-secondary p-1">
+                      {mapSearchLoading ? <div className="w-4 h-4 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin"></div> : <span className="material-symbols-outlined text-[20px]">search</span>}
                     </button>
+                  </form>
+                </div>
 
-                    {/* Status Pill & Site ID bottom */}
-                    <div className="absolute bottom-3 left-4 right-4">
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                        activeMapReport.status === 'pending' ? 'bg-red-500 text-white shadow' :
-                        activeMapReport.status === 'cleared_by_admin' ? 'bg-blue-500 text-white shadow' :
-                        'bg-emerald-500 text-white shadow'
-                      }`}>
-                        {activeMapReport.status === 'cleared_by_admin' ? 'Awaiting User Confirm' : activeMapReport.status === 'pending' ? 'Pending Action' : 'Resolved Clean'}
-                      </span>
-                      <h3 className="font-extrabold text-sm sm:text-base text-white mt-1 drop-shadow-md">
-                        Report Site #{activeMapReport.id}
-                      </h3>
-                    </div>
-                  </div>
-
-                  {/* Scrollable details */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs text-slate-300">
-                    
-                    {/* Quick Action buttons */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${activeMapReport.latitude},${activeMapReport.longitude}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold py-2 rounded-xl transition shadow-md cursor-pointer text-center"
+                {/* Visibility */}
+                <div className="space-y-3">
+                  <label className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Visibility</label>
+                  <div className="space-y-2">
+                    <label className="flex items-center justify-between p-3 rounded-xl bg-surface-container-high/50 cursor-pointer hover:bg-surface-container-high transition-all">
+                      <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-error">report</span>
+                        <span className="font-body-md text-body-md text-on-surface">Open Reports</span>
+                      </div>
+                      <input 
+                        type="checkbox" 
+                        checked={areaStatusFilter === 'active' || areaStatusFilter === 'all'} 
+                        onChange={() => setAreaStatusFilter(areaStatusFilter === 'active' ? 'all' : 'active')}
+                        className="rounded border-secondary bg-transparent text-secondary focus:ring-secondary cursor-pointer"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between p-3 rounded-xl bg-surface-container-high/50 cursor-pointer hover:bg-surface-container-high transition-all">
+                      <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-secondary">check_circle</span>
+                        <span className="font-body-md text-body-md text-on-surface">Resolved</span>
+                      </div>
+                      <input 
+                        type="checkbox" 
+                        checked={areaStatusFilter === 'cleared' || areaStatusFilter === 'all'} 
+                        onChange={() => setAreaStatusFilter(areaStatusFilter === 'cleared' ? 'all' : 'cleared')}
+                        className="rounded border-secondary bg-transparent text-secondary focus:ring-secondary cursor-pointer"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between p-3 rounded-xl bg-surface-container-high/50 cursor-pointer hover:bg-surface-container-high transition-all">
+                      <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-tertiary">grid_view</span>
+                        <span className="font-body-md text-body-md text-on-surface">Cleanup Zones</span>
+                      </div>
+                      <input 
+                        type="checkbox" 
+                        checked={areaFilter !== '__all__'} 
+                        onChange={() => setAreaFilter(areaFilter === '__all__' ? uniqueMunicipalities[0] || '__all__' : '__all__')}
+                        className="rounded border-secondary bg-transparent text-secondary focus:ring-secondary cursor-pointer"
+                      />
+                    </label>
+                    {areaFilter !== '__all__' && (
+                      <select 
+                        value={areaFilter}
+                        onChange={(e) => setAreaFilter(e.target.value)}
+                        className="w-full bg-surface-container border border-secondary/20 rounded-lg p-2 text-xs text-on-surface mt-2 outline-none focus:border-secondary cursor-pointer"
                       >
-                        <Compass size={14} />
-                        Directions
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => handleRaiseVoice(activeMapReport.id)}
-                        disabled={upvotedIds.includes(activeMapReport.id)}
-                        className={`flex items-center justify-center gap-1.5 border font-extrabold py-2 rounded-xl transition cursor-pointer ${
-                          upvotedIds.includes(activeMapReport.id)
-                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                            : 'border-slate-700 bg-slate-800 hover:bg-slate-750 text-white active:scale-95'
-                        }`}
-                      >
-                        <Megaphone size={14} />
-                        {upvotedIds.includes(activeMapReport.id) ? 'Upvoted!' : 'Raise Voice'}
-                      </button>
-                    </div>
-
-                    {/* Metadata Card */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2.5">
-                      <div className="flex items-start gap-2.5">
-                        <MapPin className="text-slate-400 flex-shrink-0 mt-0.5" size={14} />
-                        <div>
-                          <span className="block font-bold text-slate-200">Municipal Area</span>
-                          <span className="text-slate-400 text-[10px]">{activeMapReport.municipal_name || ' Lucknow'}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-2.5 border-t border-slate-850 pt-2.5">
-                        <Compass className="text-slate-400 flex-shrink-0 mt-0.5" size={14} />
-                        <div>
-                          <span className="block font-bold text-slate-200">GPS Coordinates</span>
-                          <span className="text-slate-400 text-[10px]">{activeMapReport.latitude.toFixed(5)}, {activeMapReport.longitude.toFixed(5)}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-2.5 border-t border-slate-850 pt-2.5">
-                        <Clock className="text-slate-400 flex-shrink-0 mt-0.5" size={14} />
-                        <div>
-                          <span className="block font-bold text-slate-200">Reported On</span>
-                          <span className="text-slate-400 text-[10px]">{new Date(activeMapReport.timestamp).toLocaleString()}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-2.5 border-t border-slate-850 pt-2.5">
-                        <User className="text-slate-400 flex-shrink-0 mt-0.5" size={14} />
-                        <div>
-                          <span className="block font-bold text-slate-200">Reporter</span>
-                          <span className="text-slate-400 text-[10px]">{getAnonymizedUser(activeMapReport.user_email)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Verification Actions */}
-                    {activeMapReport.status === 'cleared_by_admin' && (
-                      <div className="bg-blue-955/45 border border-blue-800/40 rounded-xl p-3 space-y-2.5">
-                        <h4 className="font-extrabold text-blue-300 text-xs flex items-center gap-1.5">
-                          <ShieldCheck size={14} /> Verification Feedback
-                        </h4>
-                        <p className="text-[10px] text-blue-200">
-                          Admin marked clean. Please verify if it's cleared:
-                        </p>
-                        {activeMapReport.admin_note && (
-                          <p className="text-[10px] text-slate-400 italic bg-slate-950/60 p-2 rounded-lg border border-slate-850">
-                            <b>Admin Note:</b> {activeMapReport.admin_note}
-                          </p>
-                        )}
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleUserConfirmCleared(activeMapReport.id)}
-                            className="flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold py-1.5 rounded-lg text-[10px] transition cursor-pointer"
-                          >
-                            Verify Clean
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleUserRejectCleared(activeMapReport.id)}
-                            className="flex-1 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-extrabold py-1.5 rounded-lg text-[10px] transition cursor-pointer"
-                          >
-                            Still Dirty
-                          </button>
-                        </div>
-                      </div>
+                        {uniqueMunicipalities.map((name) => (
+                          <option key={name} value={name}>{name}</option>
+                        ))}
+                      </select>
                     )}
-
-                    {activeMapReport.status === 'done' && (
-                      <div className="bg-emerald-950/30 border border-emerald-800/30 rounded-xl p-3 space-y-1.5">
-                        <h4 className="font-extrabold text-emerald-400 text-xs flex items-center gap-1.5">
-                          <Check size={14} /> Verified Resolved
-                        </h4>
-                        <p className="text-[10px] text-emerald-300">
-                          Citizen confirmed that this location has been cleared.
-                        </p>
-                        {activeMapReport.user_feedback && (
-                          <p className="text-[10px] text-slate-400 italic bg-slate-955/60 p-2 rounded-lg border border-slate-850">
-                            <b>User Feedback:</b> {activeMapReport.user_feedback}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Discussion Thread */}
-                    <div className="space-y-2">
-                      <h4 className="font-extrabold text-slate-200 text-xs flex items-center gap-1.5">
-                        <MessageSquare size={14} className="text-emerald-450" />
-                        Community Chat ({activeMapReport.comments?.length || 0})
-                      </h4>
-
-                      {/* Comments feed list */}
-                      <div className="space-y-2 max-h-40 overflow-y-auto pr-1 bg-slate-955/40 p-2 rounded-xl border border-slate-900 shadow-inner">
-                        {!activeMapReport.comments || activeMapReport.comments.length === 0 ? (
-                          <div className="text-[9px] text-slate-500 text-center py-4">No discussions yet. Start one below!</div>
-                        ) : (
-                          activeMapReport.comments.map((c, idx) => (
-                            <div key={idx} className="bg-slate-900 border border-slate-850 rounded-lg p-2 space-y-0.5">
-                              <div className="flex justify-between items-center text-[8px] text-slate-450 font-semibold">
-                                <span>{getAnonymizedUser(c.user)}</span>
-                                <span>{c.timestamp ? new Date(c.timestamp).toLocaleDateString() : 'Just now'}</span>
-                              </div>
-                              <p className="text-[10px] text-slate-200 break-words leading-relaxed">{c.text}</p>
-                            </div>
-                          ))
-                        )}
-                      </div>
-
-                      {/* Comment Input */}
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          handleAddFeedComment(activeMapReport.id);
-                        }}
-                        className="flex gap-1.5"
-                      >
-                        <input
-                          type="text"
-                          placeholder="Ask about schedule..."
-                          value={commentInputs[activeMapReport.id] || ''}
-                          onChange={(e) => setCommentInputs(prev => ({ ...prev, [activeMapReport.id]: e.target.value }))}
-                          className="flex-1 bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-semibold focus:outline-none focus:border-emerald-500 text-white placeholder-slate-550"
-                        />
-                        <button
-                          type="submit"
-                          className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-3.5 rounded-lg text-[10px] transition flex items-center justify-center cursor-pointer"
-                        >
-                          <Send size={11} />
-                        </button>
-                      </form>
-                    </div>
-
                   </div>
                 </div>
-              )}
 
+                {/* Map Style */}
+                <div className="space-y-3">
+                  <label className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Map Style</label>
+                  <div className="flex items-center bg-surface-container-high/50 p-1 rounded-xl">
+                    {['dark', 'map', 'satellite'].map((style) => (
+                      <button
+                        key={style}
+                        type="button"
+                        onClick={() => setMapTileLayer(style)}
+                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${mapTileLayer === style ? 'bg-secondary text-on-primary-fixed shadow-[0_0_10px_rgba(65,238,194,0.3)]' : 'text-on-surface-variant hover:text-on-surface'}`}
+                      >
+                        {style}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+              
+              {/* Footer Stats in Sidebar */}
+              <div className="p-6 bg-secondary/5 border-t border-secondary/15">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-on-surface-variant text-[10px] uppercase">Grid Efficiency</p>
+                    <p className="font-stats-lg text-secondary text-2xl">
+                      {allReports.length > 0 ? Math.round((areaClearedCount / ((areaActiveCount + areaClearedCount) || 1)) * 100) : 0}%
+                    </p>
+                  </div>
+                  <span className="material-symbols-outlined text-secondary text-3xl">trending_up</span>
+                </div>
+              </div>
             </div>
+
+            {/* Map Legend (Bottom Center) */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden md:flex items-center gap-6 bg-surface/60 backdrop-blur-xl border border-secondary/15 px-8 py-3 rounded-full z-20 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#ef4444] shadow-[0_0_8px_#ef4444]"></span>
+                <span className="font-label-sm text-label-sm text-on-surface">Critical Zone (Pending)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#3b82f6] shadow-[0_0_8px_#3b82f6]"></span>
+                <span className="font-label-sm text-label-sm text-on-surface">Awaiting Verify</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full border border-secondary"></span>
+                <span className="font-label-sm text-label-sm text-on-surface">Resolved (Clean)</span>
+              </div>
+            </div>
+
+            {/* Mobile Sidebar Toggle (Bottom Center on Mobile) */}
+            <div className="sm:hidden absolute bottom-24 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+              <button 
+                className="bg-surface/80 backdrop-blur-xl border border-secondary/20 px-4 py-2 rounded-full text-secondary font-bold text-xs shadow-lg flex items-center gap-2"
+                onClick={() => {
+                  const s = prompt('Search location:', mapSearchQuery);
+                  if (s !== null) { setMapSearchQuery(s); handleMapSearch(); }
+                }}
+              >
+                <span className="material-symbols-outlined text-sm">search</span> Search
+              </button>
+            </div>
+
+            {/* Selected Map Report details */}
+            {activeMapReport && (
+              <div className="absolute sm:top-6 sm:bottom-6 sm:left-6 bottom-0 left-0 right-0 z-30 sm:w-85 w-full bg-surface/90 backdrop-blur-xl border sm:border-secondary/15 border-t border-secondary/15 sm:rounded-2xl rounded-t-3xl shadow-2xl flex flex-col overflow-hidden max-h-[75%] sm:max-h-[calc(100vh-100px)] max-w-full sm:max-w-[calc(100vw-32px)] transition-all duration-300 animate-slide-in-left">
+                
+                {/* Photo Header */}
+                <div className="relative h-48 w-full bg-surface-container-lowest flex-shrink-0">
+                  {activeMapReport.image_url ? (
+                    <img src={activeMapReport.image_url} alt="Garbage site" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-surface-container text-on-surface-variant">
+                      <span className="material-symbols-outlined text-4xl mb-2">location_on</span>
+                      <span className="text-[10px] uppercase tracking-wider font-bold">No Image Available</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-black/40"></div>
+                  
+                  {/* Close Button on image */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMapReport(null)}
+                    className="absolute top-4 right-4 bg-black/60 hover:bg-black/90 text-white rounded-full p-2 transition-all backdrop-blur-sm cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">close</span>
+                  </button>
+
+                  {/* Status Pill & Site ID bottom */}
+                  <div className="absolute bottom-4 left-5 right-5">
+                    <span className={`text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg ${
+                      activeMapReport.status === 'pending' ? 'bg-[#ef4444] text-white shadow-[0_0_10px_#ef4444]' :
+                      activeMapReport.status === 'cleared_by_admin' ? 'bg-[#3b82f6] text-white shadow-[0_0_10px_#3b82f6]' :
+                      'bg-secondary text-on-primary-fixed shadow-[0_0_10px_#41eec2]'
+                    }`}>
+                      {activeMapReport.status === 'cleared_by_admin' ? 'Awaiting User Confirm' : activeMapReport.status === 'pending' ? 'Pending Action' : 'Resolved Clean'}
+                    </span>
+                    <h3 className="font-headline-md text-headline-md text-on-surface mt-2 drop-shadow-md">
+                      Report #{activeMapReport.id}
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Scrollable details */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-5 text-sm text-on-surface-variant">
+                  
+                  {/* Quick Action buttons */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${activeMapReport.latitude},${activeMapReport.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 bg-secondary hover:bg-secondary-container active:scale-95 text-on-primary-fixed font-bold py-2.5 rounded-xl transition shadow-lg shadow-secondary/20 cursor-pointer text-center text-xs"
+                    >
+                      <span className="material-symbols-outlined text-sm">directions</span>
+                      Directions
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleRaiseVoice(activeMapReport.id)}
+                      disabled={upvotedIds.includes(activeMapReport.id)}
+                      className={`flex items-center justify-center gap-2 font-bold py-2.5 rounded-xl transition cursor-pointer text-xs ${
+                        upvotedIds.includes(activeMapReport.id)
+                          ? 'border border-secondary/30 bg-secondary/10 text-secondary'
+                          : 'border border-outline-variant bg-surface-container hover:bg-surface-container-high text-on-surface active:scale-95'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-sm">campaign</span>
+                      {upvotedIds.includes(activeMapReport.id) ? 'Upvoted!' : 'Raise Voice'}
+                    </button>
+                  </div>
+
+                  {/* Metadata Card */}
+                  <div className="bg-surface-container/50 border border-secondary/10 rounded-xl p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <span className="material-symbols-outlined text-secondary text-[18px]">location_city</span>
+                      <div>
+                        <span className="block font-bold text-on-surface text-xs uppercase tracking-wider">Municipal Area</span>
+                        <span className="text-on-surface-variant text-sm mt-0.5">{activeMapReport.municipal_name || ' Lucknow'}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 border-t border-secondary/10 pt-3">
+                      <span className="material-symbols-outlined text-secondary text-[18px]">my_location</span>
+                      <div>
+                        <span className="block font-bold text-on-surface text-xs uppercase tracking-wider">GPS Coordinates</span>
+                        <span className="text-on-surface-variant text-sm mt-0.5">{activeMapReport.latitude.toFixed(5)}, {activeMapReport.longitude.toFixed(5)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 border-t border-secondary/10 pt-3">
+                      <span className="material-symbols-outlined text-secondary text-[18px]">schedule</span>
+                      <div>
+                        <span className="block font-bold text-on-surface text-xs uppercase tracking-wider">Reported On</span>
+                        <span className="text-on-surface-variant text-sm mt-0.5">{new Date(activeMapReport.timestamp).toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 border-t border-secondary/10 pt-3">
+                      <span className="material-symbols-outlined text-secondary text-[18px]">person</span>
+                      <div>
+                        <span className="block font-bold text-on-surface text-xs uppercase tracking-wider">Reporter</span>
+                        <span className="text-on-surface-variant text-sm mt-0.5">{getAnonymizedUser(activeMapReport.user_email)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Verification Actions */}
+                  {activeMapReport.status === 'cleared_by_admin' && (
+                    <div className="bg-[#3b82f6]/10 border border-[#3b82f6]/30 rounded-xl p-4 space-y-3">
+                      <h4 className="font-bold text-[#3b82f6] text-sm flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">verified_user</span> Verification Needed
+                      </h4>
+                      <p className="text-xs text-[#93c5fd]">
+                        Admin marked clean. Please verify if it's cleared:
+                      </p>
+                      {activeMapReport.admin_note && (
+                        <p className="text-xs text-[#93c5fd] italic bg-black/20 p-3 rounded-lg border border-[#3b82f6]/20">
+                          <b>Admin Note:</b> {activeMapReport.admin_note}
+                        </p>
+                      )}
+                      <div className="flex gap-3 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => handleUserConfirmCleared(activeMapReport.id)}
+                          className="flex-1 bg-secondary hover:bg-secondary-container active:scale-95 text-on-primary-fixed font-bold py-2 rounded-lg text-xs transition cursor-pointer shadow-lg shadow-secondary/20"
+                        >
+                          Verify Clean
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUserRejectCleared(activeMapReport.id)}
+                          className="flex-1 bg-error hover:bg-red-500 active:scale-95 text-white font-bold py-2 rounded-lg text-xs transition cursor-pointer"
+                        >
+                          Still Dirty
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeMapReport.status === 'done' && (
+                    <div className="bg-secondary/10 border border-secondary/30 rounded-xl p-4 space-y-2">
+                      <h4 className="font-bold text-secondary text-sm flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">check_circle</span> Verified Resolved
+                      </h4>
+                      <p className="text-xs text-secondary/80">
+                        Citizen confirmed that this location has been cleared.
+                      </p>
+                      {activeMapReport.user_feedback && (
+                        <p className="text-xs text-on-surface-variant italic bg-surface-container p-3 rounded-lg border border-secondary/10">
+                          <b>User Feedback:</b> {activeMapReport.user_feedback}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Discussion Thread */}
+                  <div className="space-y-3 pb-4">
+                    <h4 className="font-bold text-on-surface text-sm flex items-center gap-2">
+                      <span className="material-symbols-outlined text-secondary text-[18px]">forum</span>
+                      Community Chat ({activeMapReport.comments?.length || 0})
+                    </h4>
+
+                    {/* Comments feed list */}
+                    <div className="space-y-3 max-h-48 overflow-y-auto pr-2 bg-surface-container/30 p-3 rounded-xl border border-secondary/10 shadow-inner">
+                      {!activeMapReport.comments || activeMapReport.comments.length === 0 ? (
+                        <div className="text-xs text-on-surface-variant text-center py-6">No discussions yet. Start one below!</div>
+                      ) : (
+                        activeMapReport.comments.map((c, idx) => (
+                          <div key={idx} className="bg-surface-container border border-secondary/10 rounded-lg p-3 space-y-1">
+                            <div className="flex justify-between items-center text-[10px] text-on-surface-variant font-bold">
+                              <span>{getAnonymizedUser(c.user)}</span>
+                              <span>{c.timestamp ? new Date(c.timestamp).toLocaleDateString() : 'Just now'}</span>
+                            </div>
+                            <p className="text-xs text-on-surface break-words leading-relaxed">{c.text}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Comment Input */}
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleAddFeedComment(activeMapReport.id);
+                      }}
+                      className="flex gap-2"
+                    >
+                      <input
+                        type="text"
+                        placeholder="Ask about schedule..."
+                        value={commentInputs[activeMapReport.id] || ''}
+                        onChange={(e) => setCommentInputs(prev => ({ ...prev, [activeMapReport.id]: e.target.value }))}
+                        className="flex-1 bg-surface-container border border-secondary/20 px-4 py-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary text-on-surface placeholder-on-surface-variant transition-all"
+                      />
+                      <button
+                        type="submit"
+                        className="bg-secondary hover:bg-secondary-container active:scale-95 text-on-primary-fixed px-4 rounded-xl transition flex items-center justify-center cursor-pointer shadow-lg shadow-secondary/20"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">send</span>
+                      </button>
+                    </form>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 
