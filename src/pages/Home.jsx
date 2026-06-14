@@ -315,12 +315,25 @@ export default function Home({ session, isAdmin }) {
   // Camera & submission state
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [stream, setStream] = useState(null);
   const [photo, setPhoto] = useState(null);
   const [step, setStep] = useState('camera'); // camera | verify | confirm | submitting | done
   const [verifyStatus, setVerifyStatus] = useState('');
   const [location, setLocation] = useState(null);
   const [submitError, setSubmitError] = useState('');
+
+  // 3-Step Wizard redesign state additions
+  const [reportStep, setReportStep] = useState(1);
+  const [wasteCategory, setWasteCategory] = useState('General Litter');
+  const [severityLevel, setSeverityLevel] = useState('Medium');
+  const [publicHazard, setPublicHazard] = useState(true);
+  const [address, setAddress] = useState('Locating address details...');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const reportMapContainerRef = useRef(null);
+  const reportMapRef = useRef(null);
+  const reportMarkerRef = useRef(null);
 
   // Reports Store (all public reports & user's reports)
   const [allReports, setAllReports] = useState([]);
@@ -644,6 +657,73 @@ export default function Home({ session, isAdmin }) {
   };
 
   // ── Capture flow ────────────────────────────────────────────────
+  const fetchAddress = async (lat, lon) => {
+    setAddress('Locating coordinate address...');
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+      const data = await res.json();
+      if (data && data.display_name) {
+        const parts = data.display_name.split(',');
+        const namePart = parts[0] ? parts[0].trim() : '';
+        const areaPart = parts[1] ? parts[1].trim() : '';
+        const displayStr = `${namePart}${areaPart ? ', ' + areaPart : ''}`;
+        setAddress(`${lat.toFixed(4)}° N, ${lon.toFixed(4)}° W (${displayStr})`);
+      } else {
+        setAddress(`${lat.toFixed(4)}° N, ${lon.toFixed(4)}° W`);
+      }
+    } catch {
+      setAddress(`${lat.toFixed(4)}° N, ${lon.toFixed(4)}° W`);
+    }
+  };
+
+  const mapSeverity = (sev) => {
+    if (!sev) return 'Medium';
+    const s = sev.toLowerCase();
+    if (s.includes('low')) return 'Low';
+    if (s.includes('mod') || s.includes('med')) return 'Medium';
+    if (s.includes('high') || s.includes('crit') || s.includes('very')) return 'Critical';
+    return 'Medium';
+  };
+
+  const handleImageCapturedOrUploaded = async (dataUrl) => {
+    setPhoto(dataUrl);
+    setIsAnalyzing(true);
+    setVerifyStatus('Analyzing waste with Wolfram AI...');
+
+    // Get location and classify image in parallel
+    Promise.allSettled([
+      classifyWasteWithWolfram(dataUrl),
+      getLocation(),
+    ]).then(([categoryResult, pos]) => {
+      setIsAnalyzing(false);
+
+      const wolfram = categoryResult.status === 'fulfilled' ? categoryResult.value : null;
+      const coords = pos.status === 'fulfilled' ? pos.value.coords : null;
+
+      setWolframResult(wolfram);
+      if (wolfram) {
+        if (wolfram.category) {
+          setWasteCategory(wolfram.category);
+        }
+        if (wolfram.severity) {
+          setSeverityLevel(mapSeverity(wolfram.severity));
+        }
+      }
+
+      if (coords) {
+        const newLoc = { latitude: coords.latitude, longitude: coords.longitude };
+        setLocation(newLoc);
+        fetchAddress(coords.latitude, coords.longitude);
+      } else {
+        toast.error('Could not get your location. Please check your GPS/location settings.');
+        // Lucknow default fallback if GPS denied but photo captured
+        const defaultLoc = { latitude: 26.8467, longitude: 80.9462 };
+        setLocation(defaultLoc);
+        fetchAddress(defaultLoc.latitude, defaultLoc.longitude);
+      }
+    });
+  };
+
   const capturePhoto = async () => {
     if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
@@ -654,31 +734,28 @@ export default function Home({ session, isAdmin }) {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
 
     stopCamera();
-    setPhoto(dataUrl);
-    setStep('verify');
+    handleImageCapturedOrUploaded(dataUrl);
+  };
 
-    // Run Wolfram AI Classification and geolocation in parallel
-    setVerifyStatus('Analyzing waste with Wolfram AI...');
-    const [categoryResult, pos] = await Promise.allSettled([
-      classifyWasteWithWolfram(dataUrl),
-      getLocation(),
-    ]);
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const wolfram = categoryResult.status === 'fulfilled' ? categoryResult.value : null;
-    const coords = pos.status === 'fulfilled' ? pos.value.coords : null;
-
-    setWolframResult(wolfram);
-
-    if (!coords) {
-      toast.error('Could not get your location. Please enable GPS/location services and try again.');
-      setStep('camera');
-      setPhoto(null);
-      startCamera();
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size exceeds 10MB limit.');
       return;
     }
 
-    setLocation({ latitude: coords.latitude, longitude: coords.longitude });
-    setStep('confirm');
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const dataUrl = event.target.result;
+      handleImageCapturedOrUploaded(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
   };
 
   // Mocked municipal finder from coords
@@ -701,7 +778,6 @@ export default function Home({ session, isAdmin }) {
     return nearest;
   };
 
-  // ── Submit report to Supabase ────────────────────────────────────
   const submitReport = async () => {
     if (!photo || !location) return;
     setStep('submitting');
@@ -743,8 +819,8 @@ export default function Home({ session, isAdmin }) {
         municipal_lat: nearestMunicipal.lat,
         municipal_lon: nearestMunicipal.lon,
         description: reportNote.trim() || null,
-        category: wolframResult?.category || null,
-        severity: wolframResult?.severity || null,
+        category: wasteCategory || null,
+        severity: severityLevel || null,
         recyclable: wolframResult?.recyclable ?? null
       });
 
@@ -765,10 +841,16 @@ export default function Home({ session, isAdmin }) {
 
   const resetToCamera = () => {
     setStep('camera');
+    setReportStep(1);
     setPhoto(null);
     setLocation(null);
     setSubmitError('');
     setReportNote('');
+    setWasteCategory('General Litter');
+    setSeverityLevel('Medium');
+    setPublicHazard(true);
+    setWolframResult(null);
+    setAddress('Fetching location details...');
   };
 
   // ── Filter unique areas ──────────────────────────────────────────
@@ -1474,77 +1556,561 @@ export default function Home({ session, isAdmin }) {
 
         {/* ── MODE: FILE REPORT ────────────────────────────────────────── */}
         {viewMode === 'report' && (
-          <div className="w-full animate-tab-transition">
+          <div className="w-full animate-tab-transition flex flex-col items-center gap-6">
             
-            {/* Step: Camera */}
+            {/* 3D Header Split Section */}
             {step === 'camera' && (
-              <div className="w-full flex flex-col items-center space-y-6 animate-tab-transition">
-                {/* 3D Header Split Section */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center w-full max-w-3xl bg-slate-800/10 p-5 rounded-3xl border border-slate-850 shadow-inner">
-                  <div className="md:col-span-8 text-center md:text-left space-y-2">
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Report Illegal Dumping</h1>
-                    <p className="text-slate-405 text-xs sm:text-sm leading-relaxed">
-                      Snap a picture of dumping spots or overflowing garbage. Our AI checks report validity, municipal crews clean up, and we plant trees on your behalf!
-                    </p>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center w-full max-w-3xl bg-slate-800/10 p-5 rounded-3xl border border-slate-850 shadow-inner">
+                <div className="md:col-span-8 text-center md:text-left space-y-2">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Report Illegal Dumping</h1>
+                  <p className="text-slate-405 text-xs sm:text-sm leading-relaxed">
+                    Snap a picture of dumping spots or overflowing garbage. Our AI checks report validity, municipal crews clean up, and we plant trees on your behalf!
+                  </p>
+                </div>
+                <div className="md:col-span-4 flex justify-center">
+                  <ThreePlanet />
+                </div>
+              </div>
+            )}
+            
+            {/* Stepper Indicator */}
+            {step === 'camera' && (
+              <div className="flex justify-between items-center mb-8 max-w-xl mx-auto w-full px-4">
+                {/* Step 1 */}
+                <div 
+                  className="flex flex-col items-center gap-2 group cursor-pointer" 
+                  onClick={() => { if (photo) setReportStep(1); }}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    reportStep === 1 
+                      ? 'bg-secondary text-on-primary-fixed shadow-[0_0_15px_rgba(65,238,194,0.4)]' 
+                      : photo 
+                        ? 'bg-secondary/20 text-secondary border border-secondary/50' 
+                        : 'border-2 border-secondary/30 bg-surface text-on-surface-variant'
+                  }`}>
+                    <span className="material-symbols-outlined text-xl">photo_camera</span>
                   </div>
-                  <div className="md:col-span-4 flex justify-center">
-                    <ThreePlanet />
-                  </div>
+                  <span className={`font-label-sm text-[11px] font-bold ${
+                    reportStep === 1 ? 'text-secondary' : 'text-on-surface-variant'
+                  }`}>Capture</span>
                 </div>
 
-                <div className="camera-container w-full aspect-video rounded-3xl flex items-center justify-center overflow-hidden bg-slate-900 border border-slate-800/80 shadow-2xl relative">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className={`w-full h-full object-cover ${!stream ? 'hidden' : ''}`}
-                  />
-                  {!stream && (
-                    <div className="text-center text-gray-500">
-                      <CameraOff className="w-16 h-16 mx-auto mb-2 text-slate-600 animate-pulse" />
-                      <p className="text-xs">Camera is offline</p>
+                {/* Connector Line 1 */}
+                <div className="flex-1 h-[2px] bg-secondary/20 mx-4">
+                  <div className={`h-full bg-secondary transition-all duration-500 ${
+                    reportStep > 1 ? 'w-full' : 'w-0'
+                  }`}></div>
+                </div>
+
+                {/* Step 2 */}
+                <div 
+                  className="flex flex-col items-center gap-2 group cursor-pointer" 
+                  onClick={() => { if (photo) setReportStep(2); }}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    reportStep === 2 
+                      ? 'bg-secondary text-on-primary-fixed shadow-[0_0_15px_rgba(65,238,194,0.4)]' 
+                      : reportStep > 2 
+                        ? 'bg-secondary/20 text-secondary border border-secondary/50' 
+                        : 'border-2 border-secondary/30 bg-surface text-on-surface-variant'
+                  }`}>
+                    <span className="material-symbols-outlined text-xl">location_on</span>
+                  </div>
+                  <span className={`font-label-sm text-[11px] font-bold ${
+                    reportStep === 2 ? 'text-secondary' : 'text-on-surface-variant'
+                  }`}>Location</span>
+                </div>
+
+                {/* Connector Line 2 */}
+                <div className="flex-1 h-[2px] bg-secondary/20 mx-4">
+                  <div className={`h-full bg-secondary transition-all duration-500 ${
+                    reportStep > 2 ? 'w-full' : 'w-0'
+                  }`}></div>
+                </div>
+
+                {/* Step 3 */}
+                <div 
+                  className="flex flex-col items-center gap-2 group cursor-pointer" 
+                  onClick={() => { if (photo && location) setReportStep(3); }}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    reportStep === 3 
+                      ? 'bg-secondary text-on-primary-fixed shadow-[0_0_15px_rgba(65,238,194,0.4)]' 
+                      : 'border-2 border-secondary/30 bg-surface text-on-surface-variant'
+                  }`}>
+                    <span className="material-symbols-outlined text-xl">assignment</span>
+                  </div>
+                  <span className={`font-label-sm text-[11px] font-bold ${
+                    reportStep === 3 ? 'text-secondary' : 'text-on-surface-variant'
+                  }`}>Details</span>
+                </div>
+              </div>
+            )}
+
+            {/* Form Container */}
+            {step === 'camera' && (
+              <div className="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden w-full max-w-3xl shadow-2xl border border-secondary/15">
+                {/* Glowing effect background */}
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-secondary/10 blur-[80px] rounded-full pointer-events-none"></div>
+
+                {/* STEP 1: UPLOAD/CAPTURE */}
+                {reportStep === 1 && (
+                  <div className="step-transition opacity-100 block space-y-6">
+                    <div className="text-center mb-8">
+                      <h2 className="font-headline-lg text-headline-lg text-on-background mb-2">Identify the Issue</h2>
+                      <p className="text-on-surface-variant max-w-md mx-auto">Upload a clear photo of the waste or infrastructure damage. Our AI will analyze the severity instantly.</p>
                     </div>
-                  )}
+
+                    {!photo ? (
+                      stream ? (
+                        <div className="relative aspect-video md:aspect-[21/9] rounded-xl overflow-hidden bg-surface-container-lowest border border-secondary/20 shadow-inner flex flex-col items-center justify-center">
+                          <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
+                            <button
+                              type="button"
+                              onClick={capturePhoto}
+                              className="px-5 py-2.5 bg-red-650 hover:bg-red-600 text-white font-bold rounded-lg shadow-lg flex items-center gap-2 transition active:scale-95 cursor-pointer text-xs"
+                            >
+                              <span className="material-symbols-outlined text-sm">photo_camera</span> Take Snapshot
+                            </button>
+                            <button
+                              type="button"
+                              onClick={stopCamera}
+                              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg border border-slate-700 transition cursor-pointer text-xs"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          onClick={handleUploadClick}
+                          className="group relative aspect-video md:aspect-[21/9] rounded-xl border-2 border-dashed border-secondary/30 bg-surface-container-low/40 flex flex-col items-center justify-center cursor-pointer hover:border-secondary transition-all overflow-hidden"
+                        >
+                          <div className="flex flex-col items-center gap-4 group-hover:scale-105 transition-transform duration-500">
+                            <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-all duration-300">
+                              <span className="material-symbols-outlined text-secondary text-4xl">add_a_photo</span>
+                            </div>
+                            <span className="font-headline-md text-headline-md text-secondary">Click to Capture or Upload</span>
+                            <span className="text-on-surface-variant font-label-sm">Supports JPG, PNG up to 10MB</span>
+                          </div>
+                          <input 
+                            ref={fileInputRef}
+                            className="hidden" 
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                          />
+                          
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startCamera();
+                            }}
+                            className="absolute bottom-3 right-3 bg-secondary/10 hover:bg-secondary/25 border border-secondary/20 hover:border-secondary/50 text-secondary font-bold text-[10px] uppercase tracking-wider py-1.5 px-3 rounded-lg transition-all"
+                          >
+                            Use live camera
+                          </button>
+                        </div>
+                      )
+                    ) : (
+                      <div className="relative aspect-video md:aspect-[21/9] rounded-xl overflow-hidden border border-secondary/20 shadow-2xl bg-surface-container-lowest">
+                        <img src={photo} alt="Preview" className="w-full h-full object-cover" />
+                        
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPhoto(null);
+                            setWolframResult(null);
+                            setLocation(null);
+                          }}
+                          className="absolute top-3 right-3 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 transition backdrop-blur-sm cursor-pointer"
+                          title="Remove Photo"
+                        >
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                        
+                        {isAnalyzing && (
+                          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
+                            <div className="spinner border-secondary border-t-transparent w-8 h-8" />
+                            <p className="text-secondary font-bold text-xs animate-pulse tracking-wide uppercase">{verifyStatus}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-8 flex justify-end">
+                      <button 
+                        disabled={!photo || isAnalyzing}
+                        onClick={() => setReportStep(2)}
+                        className={`px-8 py-3 font-bold rounded-lg shadow-lg transition-all flex items-center gap-2 cursor-pointer ${
+                          photo && !isAnalyzing
+                            ? 'bg-secondary text-on-primary-fixed hover:shadow-secondary/30 hover:scale-[1.02]' 
+                            : 'bg-surface-container-highest text-on-surface-variant opacity-50 cursor-not-allowed'
+                        }`}
+                      >
+                        Next: Location
+                        <span className="material-symbols-outlined">arrow_forward</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 2: LOCATION */}
+                {reportStep === 2 && (
+                  <div className="step-transition opacity-100 block space-y-6">
+                    <div className="text-center mb-8">
+                      <h2 className="font-headline-lg text-headline-lg text-on-background mb-2">Pin Location</h2>
+                      <p className="text-on-surface-variant max-w-md mx-auto">Confirm where the issue was spotted. Use the map to adjust the precise coordinates.</p>
+                    </div>
+
+                    <div className="relative h-80 rounded-xl overflow-hidden border border-secondary/20 shadow-inner bg-slate-950">
+                      <div ref={reportMapContainerRef} className="w-full h-full z-0" />
+                      
+                      {!location && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm pointer-events-none">
+                          <div className="relative flex flex-col items-center gap-2 text-xs text-slate-350">
+                            <div className="relative">
+                              <div className="absolute -inset-4 bg-secondary/30 rounded-full animate-pulse-teal blur-md"></div>
+                              <span className="material-symbols-outlined text-secondary text-5xl relative drop-shadow-[0_0_10px_rgba(65,238,194,0.8)]" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
+                            </div>
+                            <span className="animate-pulse">Locating coordinates...</span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="absolute bottom-4 left-4 right-4 flex gap-2 z-10 pointer-events-none">
+                        <div className="flex-1 bg-surface-container-highest/90 backdrop-blur-md p-3 rounded-lg border border-secondary/20 flex items-center gap-3 pointer-events-auto">
+                          <span className="material-symbols-outlined text-secondary">explore</span>
+                          <span className="font-label-sm text-label-sm text-on-surface truncate">
+                            {address}
+                          </span>
+                        </div>
+                        
+                        <button 
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const pos = await getLocation();
+                              const newLoc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+                              setLocation(newLoc);
+                              if (reportMapRef.current) {
+                                reportMapRef.current.setView([newLoc.latitude, newLoc.longitude], 16, { animate: true });
+                                if (reportMarkerRef.current) {
+                                  reportMarkerRef.current.setLatLng([newLoc.latitude, newLoc.longitude]);
+                                }
+                              }
+                              fetchAddress(newLoc.latitude, newLoc.longitude);
+                              toast.success('Location updated from device GPS.');
+                            } catch {
+                              toast.error('Unable to fetch device GPS location.');
+                            }
+                          }}
+                          className="bg-secondary/20 hover:bg-secondary/40 backdrop-blur-md p-3 rounded-lg border border-secondary/20 transition-all pointer-events-auto cursor-pointer flex items-center justify-center"
+                          title="My Location"
+                        >
+                          <span className="material-symbols-outlined text-secondary">my_location</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 flex justify-between">
+                      <button 
+                        onClick={() => setReportStep(1)}
+                        className="px-6 py-3 border border-secondary/30 text-secondary font-bold rounded-lg hover:bg-secondary/10 transition-all flex items-center gap-2 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined">arrow_back</span>
+                        Back
+                      </button>
+                      <button 
+                        disabled={!location}
+                        onClick={() => setReportStep(3)}
+                        className={`px-8 py-3 font-bold rounded-lg shadow-lg transition-all flex items-center gap-2 cursor-pointer ${
+                          location
+                            ? 'bg-secondary text-on-primary-fixed hover:shadow-secondary/30 hover:scale-[1.02]' 
+                            : 'bg-surface-container-highest text-on-surface-variant opacity-50 cursor-not-allowed'
+                        }`}
+                      >
+                        Next: Details
+                        <span className="material-symbols-outlined">arrow_forward</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 3: DETAILS */}
+                {reportStep === 3 && (
+                  <div className="step-transition opacity-100 block space-y-6">
+                    <div className="text-center mb-8">
+                      <h2 className="font-headline-lg text-headline-lg text-on-background mb-2">Final Details</h2>
+                      <p className="text-on-surface-variant max-w-md mx-auto">Specify the type of waste and its impact on the surrounding environment.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+                      <div className="space-y-4">
+                        <label className="block">
+                          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-2">Waste Category</span>
+                          <select 
+                            value={wasteCategory}
+                            onChange={(e) => setWasteCategory(e.target.value)}
+                            className="w-full bg-surface-container-low border border-secondary/20 rounded-lg p-3 text-on-background focus:ring-2 focus:ring-secondary/50 focus:border-secondary outline-none transition-all cursor-pointer font-semibold"
+                          >
+                            {(() => {
+                              const categories = ['General Litter', 'Hazardous Materials', 'Electronic Waste', 'Organic Overflow'];
+                              if (wasteCategory && !categories.includes(wasteCategory)) {
+                                categories.push(wasteCategory);
+                              }
+                              return categories.map(cat => (
+                                <option key={cat} value={cat} className="bg-surface-container-low text-on-background">
+                                  {cat}
+                                </option>
+                              ));
+                            })()}
+                          </select>
+                        </label>
+
+                        <div className="p-4 bg-surface-container-low/40 rounded-lg border border-secondary/10">
+                          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-4">Severity Level</span>
+                          <div className="flex items-center justify-between gap-2">
+                            {['Low', 'Medium', 'Critical'].map((level) => {
+                              const isActive = severityLevel === level;
+                              return (
+                                <button
+                                  key={level}
+                                  type="button"
+                                  onClick={() => setSeverityLevel(level)}
+                                  className={`flex-1 py-2 rounded text-xs transition-all font-bold cursor-pointer font-label-sm ${
+                                    isActive
+                                      ? 'border-2 border-secondary bg-secondary/10 text-secondary'
+                                      : 'border border-secondary/20 text-on-surface-variant hover:border-secondary/60'
+                                  }`}
+                                >
+                                  {level}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-surface-container-low/40 rounded-lg border border-secondary/10">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-on-background text-sm">Public Hazard</span>
+                            <span className="text-xs text-on-surface-variant">Obstructing pathway or road</span>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer select-none">
+                            <input 
+                              type="checkbox"
+                              checked={publicHazard}
+                              onChange={(e) => setPublicHazard(e.target.checked)}
+                              className="sr-only peer" 
+                            />
+                            <div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <label className="block h-full flex flex-col">
+                          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-2">Additional Comments</span>
+                          <textarea 
+                            value={reportNote}
+                            onChange={(e) => setReportNote(e.target.value)}
+                            className="flex-1 w-full bg-surface-container-low border border-secondary/20 rounded-lg p-4 text-on-background focus:ring-2 focus:ring-secondary/50 focus:border-secondary outline-none transition-all resize-none font-medium" 
+                            placeholder="Describe odors, proximity to water, or specific items visible..."
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Wolfram AI Classification Card */}
+                    {wolframResult && (
+                      <div className="w-full rounded-2xl border border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent p-4 space-y-3">
+                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-secondary">
+                          <span className="material-symbols-outlined text-sm">eco</span>
+                          Wolfram AI Analysis Report
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                          {/* Category */}
+                          <div className="bg-surface-container/60 rounded-xl p-3 border border-secondary/10">
+                            <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Category</div>
+                            <div className="text-xs font-bold text-white mt-0.5">{wolframResult.category}</div>
+                          </div>
+
+                          {/* Severity */}
+                          <div className="bg-surface-container/60 rounded-xl p-3 border border-secondary/10">
+                            <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">AI Severity</div>
+                            <div className={`text-xs font-bold mt-0.5 ${
+                              wolframResult.severityScore >= 4 ? 'text-red-400' :
+                              wolframResult.severityScore >= 3 ? 'text-orange-400' :
+                              wolframResult.severityScore >= 2 ? 'text-yellow-400' : 'text-emerald-400'
+                            }`}>
+                              {wolframResult.severity}
+                            </div>
+                          </div>
+
+                          {/* Recyclable */}
+                          <div className="bg-surface-container/60 rounded-xl p-3 border border-secondary/10">
+                            <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Recyclable</div>
+                            <div className={`text-xs font-bold mt-0.5 ${wolframResult.recyclable ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {wolframResult.recyclable ? '♻️ Yes' : '🚫 No'}
+                            </div>
+                          </div>
+
+                          {/* Decomposition Time */}
+                          <div className="bg-surface-container/60 rounded-xl p-3 border border-secondary/10">
+                            <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Decomposition</div>
+                            <div className="text-xs font-bold text-amber-300 mt-0.5">{wolframResult.decompositionTime}</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-1.5 text-[9px] text-slate-500 italic mt-1.5">
+                          <img src={wolframLogo} className="w-3.5 h-3.5 opacity-65" alt="Wolfram" />
+                          {wolframResult.poweredBy}
+                        </div>
+                      </div>
+                    )}
+
+                    {submitError && (
+                      <p className="text-red-400 text-sm text-center font-medium">{submitError}</p>
+                    )}
+
+                    <div className="mt-8 flex justify-between">
+                      <button 
+                        onClick={() => setReportStep(2)}
+                        className="px-6 py-3 border border-secondary/30 text-secondary font-bold rounded-lg hover:bg-secondary/10 transition-all flex items-center gap-2 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined">arrow_back</span>
+                        Back
+                      </button>
+                      <button 
+                        onClick={submitReport}
+                        className="px-10 py-3 bg-secondary text-on-primary-fixed font-bold rounded-lg shadow-[0_0_30px_rgba(65,238,194,0.4)] hover:scale-[1.03] transition-all flex items-center gap-2 cursor-pointer animate-pulse-teal"
+                      >
+                        Submit Report
+                        <span className="material-symbols-outlined">send</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* STEP: SUBMITTING */}
+            {step === 'submitting' && (
+              <div className="glass-panel rounded-2xl p-8 text-center w-full max-w-3xl border border-secondary/15 flex flex-col items-center justify-center min-h-[350px]">
+                <div className="spinner border-secondary border-t-transparent w-10 h-10" />
+                <p className="text-lg font-bold text-secondary mt-4 animate-pulse">Submitting your report...</p>
+                <p className="text-xs text-on-surface-variant mt-1">Uploading image and recording coordinates in public database...</p>
+              </div>
+            )}
+
+            {/* STEP: DONE */}
+            {step === 'done' && (
+              <div className="glass-panel rounded-2xl p-8 w-full max-w-3xl border border-secondary/15 flex flex-col items-center justify-center min-h-[350px] text-center animate-tab-transition">
+                <div className="w-20 h-20 rounded-full bg-secondary text-on-primary-fixed flex items-center justify-center text-4xl shadow-[0_0_20px_rgba(65,238,194,0.4)] animate-bounce font-bold">✓</div>
+                <div className="space-y-2 mt-6">
+                  <h1 className="text-2xl sm:text-3xl font-headline-lg text-headline-lg text-secondary font-bold">Report Submitted!</h1>
+                  <p className="text-on-surface-variant text-sm max-w-sm">
+                    Thank you! Your garbage report has been saved. The municipal team will clear it shortly.
+                  </p>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  {!stream ? (
-                    <button
-                      onClick={startCamera}
-                      className="bg-emerald-600 hover:bg-emerald-500 py-3.5 px-8 rounded-full flex items-center gap-2 font-bold shadow-lg shadow-emerald-955/30 hover:scale-105 transition duration-200"
-                    >
-                      <Video size={18} /> Start Camera feed
-                    </button>
-                  ) : (
-                    <button
-                      onClick={capturePhoto}
-                      className="capture-button bg-red-650 hover:bg-red-600 w-20 h-20 rounded-full flex items-center justify-center shadow-2xl border-4 border-white transition transform active:scale-95"
-                    >
-                      <Camera size={32} />
-                    </button>
-                  )}
+                {/* Gamified Points Award Alert Card */}
+                <div className="bg-secondary/10 border border-secondary/20 p-5 rounded-2xl max-w-xs w-full flex flex-col items-center gap-2 mt-6">
+                  <span className="text-2xl">🌟</span>
+                  <h4 className="font-bold text-white text-xs tracking-wider uppercase">CleanPoints Earned!</h4>
+                  <p className="text-secondary font-black text-2xl animate-pulse">+20 Points</p>
+                  <p className="text-[10px] text-on-surface-variant leading-relaxed">
+                    Check your profile or plant trees inside the Marketplace dashboard!
+                  </p>
                 </div>
-
-                {/* Divider */}
-                <div className="w-full flex items-center gap-4 py-4">
-                  <div className="flex-1 h-px bg-slate-850" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">My Reports History</span>
-                  <div className="flex-1 h-px bg-slate-850" />
+                
+                <div className="flex flex-col sm:flex-row gap-3 mt-8">
+                  <button
+                    onClick={resetToCamera}
+                    className="px-6 py-3 border border-secondary/35 text-secondary font-bold rounded-lg hover:bg-secondary/10 transition-all flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider"
+                  >
+                    <span className="material-symbols-outlined text-sm">photo_camera</span> Report Another Site
+                  </button>
+                  <button
+                    onClick={() => {
+                      resetToCamera();
+                      navigate('/dashboard');
+                    }}
+                    className="px-6 py-3 bg-secondary text-on-primary-fixed font-bold rounded-lg shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider"
+                  >
+                    Back to Dashboard
+                  </button>
                 </div>
+              </div>
+            )}
 
-                {/* User's Reports list */}
-                <div className="w-full bg-slate-800/25 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
-                  <h3 className="font-extrabold text-sm sm:text-base flex items-center gap-2 text-slate-300">
-                    <Clock size={16} className="text-slate-400" /> My Submissions
-                  </h3>
-                  
-                  {loadingReports ? (
-                    <div className="text-center py-8 text-xs text-slate-500">Loading history...</div>
-                  ) : myReports.length === 0 ? (
-                    <div className="text-center py-10 text-xs text-slate-500">You haven't reported any garbage sites yet.</div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[350px] overflow-y-auto pr-1">
-                      {myReports.map((report) => (
+            {/* Gamification Teaser */}
+            {step === 'camera' && (
+              <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl">
+                <div className="glass-panel p-4 rounded-xl flex items-center gap-4 border border-secondary/10">
+                  <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-secondary">trending_up</span>
+                  </div>
+                  <div>
+                    <p className="font-bold text-on-background text-sm">+50 XP</p>
+                    <p className="text-xs text-on-surface-variant">Report Contribution</p>
+                  </div>
+                </div>
+                <div className="glass-panel p-4 rounded-xl flex items-center gap-4 border border-secondary/10">
+                  <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-secondary">verified</span>
+                  </div>
+                  <div>
+                    <p className="font-bold text-on-background text-sm">Fast Track</p>
+                    <p className="text-xs text-on-surface-variant">Priority Response</p>
+                  </div>
+                </div>
+                <div className="glass-panel p-4 rounded-xl flex items-center gap-4 border border-secondary/10">
+                  <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-secondary">paid</span>
+                  </div>
+                  <div>
+                    <p className="font-bold text-on-background text-sm">20 Tokens</p>
+                    <p className="text-xs text-on-surface-variant">Eco-Market Credits</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Divider */}
+            {step === 'camera' && reportStep === 1 && (
+              <div className="w-full flex items-center gap-4 py-8 max-w-3xl">
+                <div className="flex-1 h-px bg-slate-800" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">My Reports History</span>
+                <div className="flex-1 h-px bg-slate-800" />
+              </div>
+            )}
+
+            {/* User's Reports list */}
+            {step === 'camera' && reportStep === 1 && (
+              <div className="w-full bg-slate-800/25 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-4 max-w-3xl">
+                <h3 className="font-extrabold text-sm sm:text-base flex items-center gap-2 text-slate-350">
+                  <span className="material-symbols-outlined text-base">history</span> My Submissions
+                </h3>
+                
+                {loadingReports ? (
+                  <div className="text-center py-8 text-xs text-slate-500">Loading history...</div>
+                ) : myReports.length === 0 ? (
+                  <div className="text-center py-10 text-xs text-slate-500">You haven't reported any garbage sites yet.</div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[350px] overflow-y-auto pr-1">
+                    {myReports.map((report) => {
+                      const hasUpvoted = upvotedIds.includes(report.id);
+                      const isCommentsOpen = expandedComments[report.id];
+                      return (
                         <div key={report.id} className="bg-slate-800/50 border border-slate-700/50 p-4 rounded-2xl flex flex-col gap-3 hover:border-slate-600 transition justify-between">
                           <div className="flex gap-3 items-start">
                             {report.image_url ? (
@@ -1659,167 +2225,10 @@ export default function Home({ session, isAdmin }) {
                             </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            )}
-
-            {/* Step: Verify */}
-            {step === 'verify' && (
-              <div className="flex flex-col items-center space-y-4 py-12 animate-tab-transition">
-                <div className="spinner" />
-                <p className="text-lg font-semibold">{verifyStatus}</p>
-                <p className="text-sm text-slate-400">Also fetching your location</p>
-              </div>
-            )}
-
-            {/* Step: Confirm */}
-            {step === 'confirm' && (
-              <div className="w-full flex flex-col items-center space-y-4 animate-tab-transition">
-                <h1 className="text-2xl font-bold">Confirm Your Report</h1>
-
-                <div className="w-full aspect-video rounded-3xl overflow-hidden bg-gray-800 border border-slate-750/70 shadow-2xl">
-                  <img src={photo} alt="Preview" className="w-full h-full object-cover" />
-                </div>
-
-                {/* ── Wolfram AI Classification Card ─────────────── */}
-                {wolframResult && (
-                  <div className="w-full rounded-2xl border border-[#DD1100]/30 bg-gradient-to-br from-[#DD1100]/5 to-transparent p-4 space-y-3">
-                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-[#DD1100]/70">
-                      <Leaf size={12} />
-                      Wolfram AI Analysis
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Category */}
-                      <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-700/40">
-                        <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Category</div>
-                        <div className="text-sm font-bold text-white mt-0.5">{wolframResult.category}</div>
-                      </div>
-
-                      {/* Severity */}
-                      <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-700/40">
-                        <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Severity</div>
-                        <div className={`text-sm font-bold mt-0.5 ${
-                          wolframResult.severityScore >= 4 ? 'text-red-400' :
-                          wolframResult.severityScore >= 3 ? 'text-orange-400' :
-                          wolframResult.severityScore >= 2 ? 'text-yellow-400' : 'text-emerald-400'
-                        }`}>
-                          {wolframResult.severity}
-                        </div>
-                      </div>
-
-                      {/* Recyclable */}
-                      <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-700/40">
-                        <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Recyclable</div>
-                        <div className={`text-sm font-bold mt-0.5 ${wolframResult.recyclable ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {wolframResult.recyclable ? '♻️ Yes' : '🚫 No'}
-                        </div>
-                      </div>
-
-                      {/* Decomposition Time */}
-                      <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-700/40">
-                        <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Decomposition</div>
-                        <div className="text-sm font-bold text-amber-300 mt-0.5">{wolframResult.decompositionTime}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-end gap-1.5 text-[9px] text-slate-600 italic mt-2">
-                      <img src={wolframLogo} className="w-3 h-3 opacity-60" alt="Wolfram" />
-                      {wolframResult.poweredBy}
-                    </div>
+                      );
+                    })}
                   </div>
                 )}
-
-                {location && (
-                  <div className="flex items-center gap-2 text-emerald-400 text-xs bg-emerald-950/40 border border-emerald-900/40 px-5 py-2.5 rounded-full">
-                    <MapPin size={14} className="animate-bounce" />
-                    <span>GPS Location: {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</span>
-                  </div>
-                )}
-
-                <div className="w-full space-y-1.5 px-2 max-w-lg">
-                  <label className="text-[10px] uppercase font-black tracking-wider text-slate-405 block">
-                    Add a description or note (optional)
-                  </label>
-                  <textarea 
-                    rows={2}
-                    value={reportNote}
-                    onChange={(e) => setReportNote(e.target.value)}
-                    placeholder="e.g. Pile of plastics and broken glass near the park gate..."
-                    className="w-full bg-slate-900 border border-slate-700/60 rounded-2xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition-all placeholder:text-slate-500 resize-none font-medium"
-                  />
-                </div>
-
-                {submitError && (
-                  <p className="text-red-400 text-sm text-center">{submitError}</p>
-                )}
-
-                <div className="flex gap-4 pt-2">
-                  <button
-                    onClick={submitReport}
-                    className="bg-emerald-600 hover:bg-emerald-500 py-3.5 px-8 rounded-full flex items-center gap-2 font-bold shadow-lg transition duration-200"
-                  >
-                    <Send size={18} /> Submit Report
-                  </button>
-                  <button
-                    onClick={() => { resetToCamera(); startCamera(); }}
-                    className="bg-slate-700 hover:bg-slate-655 py-3.5 px-6 rounded-full flex items-center gap-2 font-bold transition duration-205"
-                  >
-                    <RotateCw size={18} /> Retake Photo
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step: Submitting */}
-            {step === 'submitting' && (
-              <div className="flex flex-col items-center space-y-4 py-12 animate-tab-transition">
-                <div className="spinner" />
-                <p className="text-lg font-semibold animate-pulse">Submitting your report...</p>
-              </div>
-            )}
-
-            {/* Step: Done */}
-            {step === 'done' && (
-              <div className="flex flex-col items-center space-y-6 py-12 text-center animate-tab-transition">
-                <div className="w-20 h-20 rounded-full bg-emerald-600 flex items-center justify-center text-4xl shadow-lg animate-bounce">✓</div>
-                <div className="space-y-2">
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-emerald-400">Report Submitted!</h1>
-                  <p className="text-slate-400 text-sm max-w-sm animate-pulse">
-                    Thank you! Your garbage report has been saved. The municipal team will clear it shortly.
-                  </p>
-                </div>
-
-                {/* Gamified Points Award Alert Card */}
-                <div className="bg-emerald-950/20 border border-emerald-500/20 p-4.5 rounded-3xl max-w-xs w-full flex flex-col items-center gap-1.5 shadow-inner mt-2 animate-tab-transition">
-                  <span className="text-2xl">🌟</span>
-                  <h4 className="font-extrabold text-white text-xs">CleanPoints Earned!</h4>
-                  <p className="text-emerald-400 font-black text-xl">+20 Points</p>
-                  <p className="text-[9px] text-slate-450 font-medium leading-relaxed">
-                    Check your profile or plant trees inside the Marketplace dashboard!
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 mt-4">
-                  <button
-                    onClick={resetToCamera}
-                    className="bg-slate-755 hover:bg-slate-700 py-3 px-6 rounded-full flex items-center gap-2 font-bold transition shadow"
-                  >
-                    <Camera size={18} /> Report Another Site
-                  </button>
-                  <button
-                    onClick={() => {
-                      resetToCamera();
-                      setViewMode('report');
-                    }}
-                    className="bg-emerald-600 hover:bg-emerald-500 py-3 px-6 rounded-full flex items-center gap-2 font-bold transition shadow border border-emerald-500/30"
-                  >
-                    Back to Home Dashboard
-                  </button>
-                </div>
               </div>
             )}
 
