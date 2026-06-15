@@ -1723,17 +1723,6 @@ export default function Home({ session, isAdmin }) {
                             accept="image/*"
                             onChange={handleFileChange}
                           />
-                          
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startCamera();
-                            }}
-                            className="absolute bottom-3 right-3 bg-secondary/10 hover:bg-secondary/25 border border-secondary/20 hover:border-secondary/50 text-secondary font-bold text-[10px] uppercase tracking-wider py-1.5 px-3 rounded-lg transition-all"
-                          >
-                            Use live camera
-                          </button>
                         </div>
                       )
                     ) : (
@@ -1762,7 +1751,19 @@ export default function Home({ session, isAdmin }) {
                       </div>
                     )}
 
-                    <div className="mt-8 flex justify-end">
+                    <div className="mt-8 flex justify-between items-center">
+                      <div>
+                        {!photo && !stream && (
+                          <button
+                            type="button"
+                            onClick={startCamera}
+                            className="px-6 py-3 border border-secondary/30 text-secondary font-bold rounded-lg hover:bg-secondary/10 transition-all flex items-center gap-2 cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-sm">photo_camera</span>
+                            Use Live Camera
+                          </button>
+                        )}
+                      </div>
                       <button 
                         disabled={!photo || isAnalyzing}
                         onClick={() => setReportStep(2)}
