@@ -1,3 +1,11 @@
+
+
+## Problem Statement
+
+**Theme:** Social Impact
+
+**Problem statement (AI for Social Impact):** Civic waste management relies heavily on manual reporting and inefficient collection routes, leading to unverified garbage dumping and overflowing municipal dustbins. Furthermore, citizens lack the motivation and transparency to actively participate in keeping their communities clean.
+
 # <img src="./public/favicon.svg" width="30" height="30" align="top" /> CleanSweep
 
 **CleanSweep** is a civic waste management platform that empowers citizens to report garbage, track cleanups, earn rewards, and build cleaner communities — all in one app.
@@ -9,6 +17,10 @@
 ![Wolfram](https://img.shields.io/badge/AI-Wolfram-DD1100?style=for-the-badge&logo=wolframlanguage)
 ![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?style=for-the-badge&logo=supabase)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+
+## Demo Link
+
+[https://cleansweepv1.vercel.app/](https://cleansweepv1.vercel.app/)
 
 ---
 
@@ -172,10 +184,19 @@ totalDistance = Total[Table[
 
 ## 📸 Screenshots
 
-![CleanSweep Dashboard](./public/clean.jpeg)
+![CleanSweep Dashboard](./public/landingPage.png)
 
 ---
 
 ## 📄 License
 
 MIT © [githubutsav](https://github.com/githubutsav)
+
+## 👥 Team Code Oxide
+
+| Name | GitHub |
+|------|--------|
+| Tushar Bajpai | [@Tushar](https://github.com/Tushar-Bajpai) |
+| Sankalp Saini | [@Sankalp](https://github.com/Arikalp) |
+| Utsav Singh | [@Utsav](https://github.com/githubutsav) |
+
