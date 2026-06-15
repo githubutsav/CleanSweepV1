@@ -1,10 +1,12 @@
 # <img src="./public/favicon.svg" width="30" height="30" align="top" /> CleanSweep
 
-## Problem Statement
+## **Problem Statement**
 
 **Theme:** Social Impact
 
 **Problem statement (AI for Social Impact):** Civic waste management relies heavily on manual reporting and inefficient collection routes, leading to unverified garbage dumping and overflowing municipal dustbins. Furthermore, citizens lack the motivation and transparency to actively participate in keeping their communities clean.
+
+## **Solution Description**
 
 **CleanSweep** is a civic waste management platform that empowers citizens to report garbage, track cleanups, earn rewards, and build cleaner communities — all in one app.
 
@@ -174,9 +176,9 @@ totalDistance = Total[Table[
 
 > See [`wolfram/README.md`](wolfram/README.md) for full deployment instructions.
 
-## Demo Link
+## **Demo Link**
 
-[https://cleansweepv1.vercel.app/](https://cleansweepv1.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-CleanSweep%20V1-00C853?style=for-the-badge&logo=vercel&logoColor=white)](https://cleansweepv1.vercel.app/)
 
 ---
 
@@ -198,10 +200,4 @@ MIT © [githubutsav](https://github.com/githubutsav)
 | Sankalp Saini | [@Sankalp](https://github.com/Arikalp) |
 | Utsav Singh | [@Utsav](https://github.com/githubutsav) |
 
-## 👥 Team Code Oxide
-
-| Name | GitHub |
-|------|--------|
-| Tushar Bajpai | [@Tushar](https://github.com/Tushar-Bajpai) |
-| Sankalp Saini | [@Sankalp](https://github.com/Arikalp) |
-| Utsav Singh | [@Utsav](https://github.com/githubutsav) |
+Built with ❤️ by Team Code Oxide
