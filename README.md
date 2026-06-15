@@ -4,9 +4,18 @@
 
 **Theme:** Social Impact
 
-**Problem statement (AI for Social Impact):** Civic waste management relies heavily on manual reporting and inefficient collection routes, leading to unverified garbage dumping and overflowing municipal dustbins. Furthermore, citizens lack the motivation and transparency to actively participate in keeping their communities clean.
+**Problem statement (AI for Social Impact):** 
+> *Civic waste management relies heavily on manual reporting and inefficient collection routes, leading to unverified garbage dumping and overflowing municipal dustbins. Furthermore, citizens lack the motivation and transparency to actively participate in keeping their communities clean.*
 
-**CleanSweep** is a civic waste management platform that empowers citizens to report garbage, track cleanups, earn rewards, and build cleaner communities — all in one app.
+<div align="center">
+  <img src="./public/favicon.ico" alt="CleanSweep logo" width="96" height="96" />
+  <p style="margin:8px 0 0;font-size:32px;font-weight:800;">CleanSweep</p>
+</div>
+
+**CleanSweep** is an end-to-end *“AI for Social Impact”*, multi-module platform designed to be the central nervous system for a city's waste management.
+It transforms civic waste reporting from a manual, unverified chore into a gamified, data-driven ecosystem. 
+
+It serves as a civic waste management platform that empowers citizens to report garbage, track cleanups, earn rewards, and build cleaner communities — all in one app.
 
 > **Powered by Wolfram** <img src="./src/assets/wolfram-logo.svg" width="16" height="16" />
 > This project leverages Wolfram Machine Learning to automatically classify and verify images of waste, ensuring accurate and efficient civic reporting.
@@ -17,8 +26,9 @@
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 ## Demo Link
-
-[https://cleansweepv1.vercel.app/](https://cleansweepv1.vercel.app/)
+<div align = "center">
+<img src="https://img.shields.io/badge/Live Demo-CleanSweep V1-00C853?style=for-the-badge&amp;logo=vercel&amp;logoColor=white" alt="Live Demo">
+</div>
 
 ---
 
@@ -178,13 +188,10 @@ totalDistance = Total[Table[
 
 > See [`wolfram/README.md`](wolfram/README.md) for full deployment instructions.
 
-## Demo Link
-
-[https://cleansweepv1.vercel.app/](https://cleansweepv1.vercel.app/)
 
 ---
 
-## 📸 Screenshots
+## 📸 Screenshot
 
 ![CleanSweep Dashboard](./public/landingPage.png)
 
@@ -201,3 +208,9 @@ MIT © [githubutsav](https://github.com/githubutsav)
 | Tushar Bajpai | [@Tushar](https://github.com/Tushar-Bajpai) |
 | Sankalp Saini | [@Sankalp](https://github.com/Arikalp) |
 | Utsav Singh | [@Utsav](https://github.com/githubutsav) |
+
+---
+
+<div align="center">
+  Built with ❤️ by Team Code Oxide
+</div>
