@@ -22,7 +22,6 @@ import {
   Check, 
   ArrowRight, 
   Lock,
-  Bell,
   Search,
   Plus
 } from 'lucide-react';
@@ -302,14 +301,7 @@ export default function Profile() {
               </div>
             )}
 
-            <button className="relative cursor-pointer hover:text-secondary transition-all p-2 rounded-full"
-              style={{ color: '#c4c6cc' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(65,238,194,0.1)'; e.currentTarget.style.color = '#41eec2'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#c4c6cc'; }}
-            >
-              <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-secondary rounded-full border border-surface"></span>
-            </button>
+
 
             {/* Profile Dropdown */}
             <div className="relative">

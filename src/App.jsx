@@ -8,6 +8,11 @@ import Admin from './pages/Admin';
 import Marketplace from './pages/Marketplace';
 import Profile from './pages/Profile';
 import DashboardOverview from './pages/DashboardOverview';
+import HowItWorks from './pages/HowItWorks';
+import FAQ from './pages/FAQ';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import CookiePolicy from './pages/CookiePolicy';
 import { useCleanStore } from './lib/store';
 import ToastContainer from './components/ToastContainer';
 
@@ -101,6 +106,11 @@ function App() {
 
         <Route path="/marketplace" element={<Marketplace session={session} />} />
         <Route path="/profile" element={session ? <Profile /> : <Navigate to="/login" />} />
+        <Route path="/how-it-works" element={<HowItWorks session={session} />} />
+        <Route path="/faqs" element={<FAQ session={session} />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy session={session} />} />
+        <Route path="/terms-of-service" element={<TermsOfService session={session} />} />
+        <Route path="/cookie-policy" element={<CookiePolicy session={session} />} />
       </Routes>
     </Router>
   );
