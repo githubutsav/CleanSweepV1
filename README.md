@@ -18,6 +18,10 @@
 ![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?style=for-the-badge&logo=supabase)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
+## Demo Link
+
+[https://cleansweepv1.vercel.app/](https://cleansweepv1.vercel.app/)
+
 ---
 
 ## ✨ Features
@@ -175,10 +179,6 @@ totalDistance = Total[Table[
 ```
 
 > See [`wolfram/README.md`](wolfram/README.md) for full deployment instructions.
-
-## Demo Link
-
-[https://cleansweepv1.vercel.app/](https://cleansweepv1.vercel.app/)
 
 ---
 
