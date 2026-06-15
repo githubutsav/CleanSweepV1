@@ -503,6 +503,12 @@ export default function Home({ session, isAdmin }) {
     }
   };
 
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+
   // ── Geolocation ─────────────────────────────────────────────────
   const getLocation = () =>
     new Promise((resolve, reject) => {
