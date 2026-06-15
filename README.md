@@ -197,3 +197,11 @@ MIT © [githubutsav](https://github.com/githubutsav)
 | Tushar Bajpai | [@Tushar](https://github.com/Tushar-Bajpai) |
 | Sankalp Saini | [@Sankalp](https://github.com/Arikalp) |
 | Utsav Singh | [@Utsav](https://github.com/githubutsav) |
+
+## 👥 Team Code Oxide
+
+| Name | GitHub |
+|------|--------|
+| Tushar Bajpai | [@Tushar](https://github.com/Tushar-Bajpai) |
+| Sankalp Saini | [@Sankalp](https://github.com/Arikalp) |
+| Utsav Singh | [@Utsav](https://github.com/githubutsav) |
