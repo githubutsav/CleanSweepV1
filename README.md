@@ -1,5 +1,11 @@
 # <img src="./public/favicon.svg" width="30" height="30" align="top" /> CleanSweep
 
+## Problem Statement
+
+**Theme:** Social Impact
+
+**Problem statement (AI for Social Impact):** Civic waste management relies heavily on manual reporting and inefficient collection routes, leading to unverified garbage dumping and overflowing municipal dustbins. Furthermore, citizens lack the motivation and transparency to actively participate in keeping their communities clean.
+
 **CleanSweep** is a civic waste management platform that empowers citizens to report garbage, track cleanups, earn rewards, and build cleaner communities — all in one app.
 
 > **Powered by Wolfram** <img src="./src/assets/wolfram-logo.svg" width="16" height="16" />
@@ -167,6 +173,10 @@ totalDistance = Total[Table[
 ```
 
 > See [`wolfram/README.md`](wolfram/README.md) for full deployment instructions.
+
+## Demo Link
+
+[https://cleansweepv1.vercel.app/](https://cleansweepv1.vercel.app/)
 
 ---
 
