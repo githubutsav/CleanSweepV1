@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.svg';
+import wolframLogo from '../assets/wolfram-logo.svg';
 import Globe from '../components/Globe';
+import { GridBackground } from '../components/GridBackground';
 
 // Animated count-up component that triggers when scrolled into view
 function CountUp({ end, suffix = '', duration = 2000 }) {
@@ -111,7 +114,7 @@ export default function Landing({ session }) {
       <header className="fixed top-0 w-full z-50 bg-surface/60 backdrop-blur-xl border-b border-secondary/15 shadow-[0_0_20px_rgba(0,212,170,0.1)]">
         <nav className="flex justify-between items-center max-w-[1440px] mx-auto px-6 md:px-container-margin-desktop h-20">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-            <img alt="CleanSweep Logo" className="h-10 w-10 filter drop-shadow-[0_0_8px_rgba(5,255,163,0.5)]" src="/favicon.svg" />
+            <img alt="CleanSweep Logo" className="h-10 w-10 filter drop-shadow-[0_0_8px_rgba(5,255,163,0.5)]" src={logo} />
             <span className="font-headline-md text-2xl font-extrabold text-on-surface tracking-tighter filter drop-shadow-[0_0_10px_rgba(65,238,194,0.2)]">CleanSweep</span>
           </div>
 
@@ -179,46 +182,54 @@ export default function Landing({ session }) {
 
       <main>
         {/* Hero Section */}
-        <section className="relative min-h-screen flex items-center pt-20 px-6 md:px-container-margin-desktop max-w-[1440px] mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-lg items-center w-full">
-            <div className="reveal">
-              <h1 className="font-headline-xl text-headline-xl sm:text-5xl md:text-6xl lg:text-7xl mb-stack-sm leading-tight text-white font-black tracking-tight">
-                Clean Cities Start <br />
-                <span className="text-secondary filter drop-shadow-[0_0_12px_rgba(65,238,194,0.4)]">With You</span>
-              </h1>
-              <p className="text-on-surface-variant/90 font-body-lg text-body-lg mb-stack-lg max-w-xl font-medium leading-relaxed">
-                Report garbage, track cleanups, and earn rewards — all in one advanced civic infrastructure platform.
-              </p>
-              <div className="flex flex-wrap gap-stack-md">
-                {session ? (
+        <GridBackground className="w-full">
+          <section className="relative min-h-screen flex items-center pt-20 px-6 md:px-container-margin-desktop max-w-[1440px] mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-lg items-center w-full">
+              <div className="reveal">
+                <h1 className="font-headline-xl text-headline-xl sm:text-5xl md:text-6xl lg:text-7xl mb-stack-sm leading-tight text-white font-black tracking-tight">
+                  Clean Cities Start <br />
+                  <span className="text-secondary filter drop-shadow-[0_0_12px_rgba(65,238,194,0.4)]">With You</span>
+                </h1>
+                <p className="text-on-surface-variant/90 font-body-lg text-body-lg mb-4 max-w-xl font-medium leading-relaxed">
+                  Report garbage, track cleanups, and earn rewards — all in one advanced civic infrastructure platform.
+                </p>
+                <div className="flex items-center gap-2 mb-stack-lg">
+                  <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#DD1100] bg-[#DD1100]/10 border border-[#DD1100]/30 px-4 py-1.5 rounded-full">
+                    <img src={wolframLogo} alt="Wolfram" className="w-3.5 h-3.5" />
+                    Powered by Wolfram
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-stack-md">
+                  {session ? (
+                    <button
+                      onClick={() => navigate('/dashboard')}
+                      className="bg-secondary text-on-secondary px-8 md:px-12 py-4 rounded-full font-bold btn-glow hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    >
+                      Go to Dashboard
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleSignIn}
+                      className="bg-secondary text-on-secondary px-8 md:px-12 py-4 rounded-full font-bold btn-glow hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    >
+                      Get Started
+                    </button>
+                  )}
                   <button
-                    onClick={() => navigate('/dashboard')}
-                    className="bg-secondary text-on-secondary px-8 md:px-12 py-4 rounded-full font-bold btn-glow hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    onClick={handleExploreMap}
+                    className="border border-secondary text-secondary px-8 md:px-12 py-4 rounded-full font-bold hover:bg-secondary/10 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                   >
-                    Go to Dashboard
+                    Explore Map
                   </button>
-                ) : (
-                  <button
-                    onClick={handleSignIn}
-                    className="bg-secondary text-on-secondary px-8 md:px-12 py-4 rounded-full font-bold btn-glow hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                  >
-                    Get Started
-                  </button>
-                )}
-                <button
-                  onClick={handleExploreMap}
-                  className="border border-secondary text-secondary px-8 md:px-12 py-4 rounded-full font-bold hover:bg-secondary/10 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                >
-                  Explore Map
-                </button>
+                </div>
+              </div>
+
+              <div className="absolute top-[-10px] right-[-180px] z-20 flex w-[360px] sm:right-[-210px] sm:w-[460px] md:top-[-20px] md:right-[-240px] md:w-[560px] lg:right-[-220px] lg:w-[640px]">
+                <Globe className="pointer-events-none h-[360px] w-[360px] sm:h-[460px] sm:w-[460px] md:pointer-events-auto md:h-[560px] md:w-[560px] md:cursor-grab md:active:cursor-grabbing lg:h-[640px] lg:w-[640px]" />
               </div>
             </div>
-
-            <div className="absolute top-[-10px] right-[-180px] z-20 flex w-[360px] sm:right-[-210px] sm:w-[460px] md:top-[-20px] md:right-[-240px] md:w-[560px] lg:right-[-220px] lg:w-[640px]">
-              <Globe className="pointer-events-none h-[360px] w-[360px] sm:h-[460px] sm:w-[460px] md:pointer-events-auto md:h-[560px] md:w-[560px] md:cursor-grab md:active:cursor-grabbing lg:h-[640px] lg:w-[640px]" />
-            </div>
-          </div>
-        </section>
+          </section>
+        </GridBackground>
 
         {/* Stats Banner */}
         <section className="py-20 md:py-24 bg-surface-dim border-y border-secondary/10 reveal">
@@ -260,7 +271,7 @@ export default function Landing({ session }) {
                 <span className="material-symbols-outlined text-secondary text-5xl mb-6 group-hover:scale-110 transition-transform filter drop-shadow-[0_0_6px_rgba(65,238,194,0.3)]">report</span>
                 <h3 className="font-headline-md text-headline-md mb-2 text-white font-bold tracking-tight">Report Garbage</h3>
                 <p className="text-on-surface-variant/90 text-sm md:text-base font-medium">
-                  Snap a photo of litter or overflowing bins and our AI will automatically geo-tag and categorize the report for city services.
+                  Snap a photo of litter or overflowing bins and Wolfram AI will automatically classify, geo-tag, and assess severity for city services.
                 </p>
               </div>
             </div>
@@ -286,6 +297,20 @@ export default function Landing({ session }) {
                 </p>
               </div>
             </div>
+            {/* Wolfram AI Card — Full width highlight */}
+            <div className="md:col-span-4 glass-card p-6 md:p-stack-md rounded-xl glow-hover flex flex-col sm:flex-row items-start sm:items-center gap-6 group cursor-pointer relative overflow-hidden" onClick={handleSignIn}>
+              <div className="absolute top-0 right-0 w-48 h-48 bg-[#DD1100]/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="bg-[#DD1100]/10 p-4 rounded-full sm:shrink-0 transition-colors group-hover:bg-[#DD1100]/20 border border-[#DD1100]/20">
+                <img src={wolframLogo} alt="Wolfram" className="w-8 h-8" />
+              </div>
+              <div className="relative z-10">
+                <h3 className="font-headline-md text-headline-md text-white font-bold tracking-tight">Wolfram AI</h3>
+                <p className="text-on-surface-variant/90 text-sm font-medium">
+                  Neural net image classification identifies waste type, severity, recyclability, and decomposition time. Route optimization uses <span className="text-[#DD1100] font-semibold">FindShortestTour</span> to compute the most fuel-efficient garbage truck route.
+                </p>
+              </div>
+            </div>
+
 
             {/* Small Card 3 - Leaderboard */}
             <div className="glass-card p-6 md:p-stack-md rounded-xl glow-hover flex flex-col justify-between group cursor-pointer" onClick={handleSignIn}>
@@ -332,6 +357,8 @@ export default function Landing({ session }) {
                 </p>
               </div>
             </div>
+
+
           </div>
         </section>
 
@@ -353,9 +380,9 @@ export default function Landing({ session }) {
 
             <div className="text-center flex flex-col items-center reveal relative z-10 md:mt-12">
               <div className="w-16 h-16 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-2xl mb-6 shadow-[0_0_20px_rgba(65,238,194,0.5)]">2</div>
-              <h3 className="font-headline-md text-headline-md mb-4 text-white font-bold">AI Verifies</h3>
+              <h3 className="font-headline-md text-headline-md mb-4 text-white font-bold">Wolfram Classifies</h3>
               <p className="text-on-surface-variant/90 text-sm md:text-base max-w-xs font-medium">
-                Our system validates the report and routes it to the nearest municipal cleaning crew.
+                Wolfram neural networks analyze the image, classify the waste type, assess severity, and route it to the nearest municipal crew.
               </p>
             </div>
 
@@ -373,26 +400,28 @@ export default function Landing({ session }) {
         </section>
 
         {/* Footer CTA Section */}
-        <section className="relative py-40 px-6 md:px-container-margin-desktop overflow-hidden border-t border-secondary/10 bg-surface-dim">
-          {/* Background Watermark Globe */}
-          <div className="absolute inset-0 z-0 flex justify-center items-center opacity-[0.08] pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" className="w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] text-secondary">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-              <path d="M2 12h20" />
-              <path d="M12 2a10 10 0 0 1 4 7.5A10 10 0 0 1 12 17a10 10 0 0 1-4-7.5A10 10 0 0 1 12 2" />
-              <path d="M4.93 4.93a10 10 0 0 0 14.14 14.14" />
-              <path d="M4.93 19.07a10 10 0 0 1 0-14.14" />
-            </svg>
-          </div>
+        <GridBackground className="w-full">
+          <section className="relative py-40 px-6 md:px-container-margin-desktop overflow-hidden border-t border-secondary/10 bg-transparent">
+            {/* Background Watermark Globe */}
+            <div className="absolute inset-0 z-0 flex justify-center items-center opacity-[0.08] pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" className="w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] text-secondary">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                <path d="M2 12h20" />
+                <path d="M12 2a10 10 0 0 1 4 7.5A10 10 0 0 1 12 17a10 10 0 0 1-4-7.5A10 10 0 0 1 12 2" />
+                <path d="M4.93 4.93a10 10 0 0 0 14.14 14.14" />
+                <path d="M4.93 19.07a10 10 0 0 1 0-14.14" />
+              </svg>
+            </div>
 
-          <div className="relative z-10 text-center reveal max-w-4xl mx-auto">
-            <h2 className="font-headline-xl text-headline-xl sm:text-5xl md:text-6xl text-white leading-tight font-black tracking-tight mb-0">
-              Join the CleanSweep <br />
-              <span className="text-secondary filter drop-shadow-[0_0_12px_rgba(65,238,194,0.4)]">Movement</span>
-            </h2>
-          </div>
-        </section>
+            <div className="relative z-10 text-center reveal max-w-4xl mx-auto">
+              <h2 className="font-headline-xl text-headline-xl sm:text-5xl md:text-6xl text-white leading-tight font-black tracking-tight mb-0">
+                Join the CleanSweep <br />
+                <span className="text-secondary filter drop-shadow-[0_0_12px_rgba(65,238,194,0.4)]">Movement</span>
+              </h2>
+            </div>
+          </section>
+        </GridBackground>
       </main>
 
       {/* Footer */}
@@ -404,7 +433,7 @@ export default function Landing({ session }) {
             {/* Brand Column */}
             <div className="md:col-span-4 space-y-5">
               <div className="flex items-center gap-3">
-                <img alt="CleanSweep Logo" className="h-9 w-9 filter drop-shadow-[0_0_8px_rgba(5,255,163,0.4)]" src="/favicon.svg" />
+                <img alt="CleanSweep Logo" className="h-9 w-9 filter drop-shadow-[0_0_8px_rgba(5,255,163,0.4)]" src={logo} />
                 <span className="text-xl font-extrabold text-white tracking-tight">CleanSweep</span>
               </div>
               <p className="text-slate-400 text-sm leading-relaxed max-w-xs">

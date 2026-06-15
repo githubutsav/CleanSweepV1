@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, CheckCircle2, XCircle } from 'lucide-react';
+import { Mail, Lock, User, CheckCircle2, XCircle, Eye, EyeOff } from 'lucide-react';
+import logo from '../assets/logo.svg';
 
 // ── Animated toast notification card ──────────────────────────────────────────
 function NotificationCard({ message, isError, onDone }) {
@@ -42,6 +43,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [toast, setToast] = useState(null); // { message, isError }
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const showMsg = (text, error = false) => {
@@ -96,26 +98,30 @@ export default function Login() {
       // Browser will redirect — no need to navigate manually
     } catch (error) {
       console.error('Google OAuth error:', error);
-      showMsg(error.message || 'Google sign-in failed. Make sure Google provider is enabled in Supabase.', true);
+      showMsg('Google sign-in failed. Please try again later.', true);
       setGoogleLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Page-level glow accent behind card */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-[600px] h-[600px] rounded-full bg-emerald-500/5 blur-3xl" />
+      </div>
+      <div className="w-full max-w-md space-y-6 relative z-10">
 
         {/* Logo */}
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <img src="/favicon.svg" className="w-9 h-9 filter drop-shadow-[0_0_8px_rgba(5,255,163,0.5)]" alt="CleanSweep Logo" />
+            <img src={logo} className="w-9 h-9 filter drop-shadow-[0_0_8px_rgba(5,255,163,0.5)]" alt="CleanSweep Logo" />
             <span className="text-3xl font-extrabold tracking-tight">CleanSweep</span>
           </div>
           <p className="text-slate-400 text-sm">Report illegal dumping in your city</p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-slate-700/70 bg-slate-800/60 backdrop-blur p-7 shadow-2xl space-y-5">
+        <div className="glass-modal rounded-2xl p-7 shadow-2xl space-y-5">
           <h1 className="text-xl font-bold tracking-tight">
             {isRegistering ? 'Create an account' : 'Welcome back'}
           </h1>
@@ -132,7 +138,7 @@ export default function Login() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-lg text-sm outline-none transition"
+                    className="glass-input w-full pl-9 pr-3 py-2.5 rounded-lg text-sm text-white placeholder-slate-500"
                     placeholder="Your Name"
                   />
                 </div>
@@ -148,7 +154,7 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-lg text-sm outline-none transition"
+                  className="glass-input w-full pl-9 pr-3 py-2.5 rounded-lg text-sm text-white placeholder-slate-500"
                   placeholder="you@example.com"
                 />
               </div>
@@ -159,14 +165,21 @@ export default function Login() {
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 rounded-lg text-sm outline-none transition"
+                  className="glass-input w-full pl-9 pr-10 py-2.5 rounded-lg text-sm text-white placeholder-slate-500"
                   placeholder="Min. 6 characters"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-550 hover:text-[#41eec2] transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
@@ -222,11 +235,6 @@ export default function Login() {
             </button>
           </div>
         </div>
-
-        {/* Supabase config hint */}
-        <p className="text-center text-xs text-slate-600">
-          New project? Make sure to run the database SQL setup and enable Email auth in Supabase.
-        </p>
       </div>
     </div>
   );

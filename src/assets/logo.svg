@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+  <defs>
+    <!-- Left leaf half gradient: bright neon green to cyan -->
+    <linearGradient id="primary-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#05ffa3"/>
+      <stop offset="100%" stop-color="#00b4d8"/>
+    </linearGradient>
+
+    <!-- Right leaf half gradient: emerald to mint green -->
+    <linearGradient id="accent-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+
+    <!-- Center vein/sweep lines gradient -->
+    <linearGradient id="vein-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#022c22"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Glowing drop-shadow container for modern browser rendering -->
+  <g style="filter: drop-shadow(0px 0px 8px rgba(5, 255, 163, 0.65));">
+    <!-- Left side of the stylized leaf -->
+    <path d="M64,18 C32,18 26,56 42,92 C48,105 57,112 64,116 C64,116 64,90 64,82 C64,76 58,72 54,66 C50,60 50,50 60,39 C62,37 64,35 64,35" fill="url(#primary-grad)"/>
+    
+    <!-- Right side of the stylized leaf -->
+    <path d="M64,18 C96,18 102,56 86,92 C80,105 71,112 64,116 C64,116 64,90 64,82 C64,76 70,72 74,66 C78,60 78,50 68,39 C66,37 64,35 64,35" fill="url(#accent-grad)"/>
+    
+    <!-- Dynamic sweep streaks/leaf veins -->
+    <path d="M64,35 L64,111" stroke="url(#vein-grad)" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M64,54 Q50,60 44,71" fill="none" stroke="url(#vein-grad)" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M64,70 Q52,78 48,91" fill="none" stroke="url(#vein-grad)" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M64,60 Q78,66 84,77" fill="none" stroke="url(#vein-grad)" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M64,76 Q76,84 80,97" fill="none" stroke="url(#vein-grad)" stroke-width="3.5" stroke-linecap="round"/>
+  </g>
+</svg>
