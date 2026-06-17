@@ -18,7 +18,8 @@ import {
   Plus, 
   Phone, 
   MessageSquare,
-  Award
+  Award,
+  Info
 } from 'lucide-react';
 import { useCleanStore } from '../lib/store';
 import { supabase } from '../lib/supabaseClient';
@@ -475,6 +476,11 @@ export default function Marketplace() {
               <p className="text-xs text-on-surface-variant leading-relaxed">
                 Contact licensed local recyclers in Lucknow to pick up sorted plastic, metal, and glass recyclables directly from your location.
               </p>
+
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-450 text-[10.5px] font-semibold leading-normal">
+                <Info size={13} className="shrink-0 text-amber-450" />
+                <span>Note: The call and message features will work on mobiles only.</span>
+              </div>
 
               <div className="space-y-3">
                 {collectors.map((c, idx) => (
