@@ -716,7 +716,7 @@ export default function Profile() {
           style={{ background: 'rgba(17,20,18,0.85)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(65,238,194,0.15)' }}
         >
           {[
-            { label: 'Report', icon: Camera, action: () => navigate('/dashboard/new-report') },
+            { label: 'Home', icon: LayoutDashboard, action: () => navigate('/dashboard') },
             { label: 'Map', icon: Map, action: () => navigate('/dashboard/report', { state: { viewMode: 'explore-map' } }) },
             { label: '', icon: Plus, action: () => navigate('/dashboard/new-report'), isCenter: true },
             { label: 'Social', icon: Megaphone, action: () => navigate('/dashboard/report', { state: { viewMode: 'community' } }) },
