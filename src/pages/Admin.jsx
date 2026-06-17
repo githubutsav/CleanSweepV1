@@ -119,6 +119,7 @@ export default function Admin({ session }) {
   const [profileMsg, setProfileMsg] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState('');
 
   // Clearance Modal state
   const [clearingReportId, setClearingReportId] = useState(null);
@@ -287,11 +288,14 @@ export default function Admin({ session }) {
       }, 0);
       supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, avatar_url')
         .eq('id', session.user.id)
         .single()
         .then(({ data }) => {
           if (data?.full_name) setProfileName(data.full_name);
+          const googleAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
+          const finalAvatar = data?.avatar_url || googleAvatar || '';
+          setProfileAvatarUrl(finalAvatar);
         });
     }
 
@@ -752,9 +756,15 @@ export default function Admin({ session }) {
           <div className="relative">
             <button 
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="flex items-center gap-2 bg-slate-705 hover:bg-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition border border-slate-700/60 cursor-pointer"
+              className="flex items-center gap-2 bg-slate-705 hover:bg-slate-700 px-3 py-1.5 rounded-xl text-sm font-semibold transition border border-slate-700/60 cursor-pointer overflow-hidden"
             >
-              <User size={16} />
+              <div className="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden bg-slate-800 shrink-0">
+                {profileAvatarUrl ? (
+                  <img src={profileAvatarUrl} alt="profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={14} className="text-emerald-400" />
+                )}
+              </div>
               <span className="hidden sm:inline">{profileName || session?.user?.email}</span>
             </button>
             

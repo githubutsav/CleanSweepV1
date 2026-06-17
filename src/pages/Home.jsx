@@ -1361,9 +1361,13 @@ export default function Home({ session, isAdmin }) {
 
         {/* User identity */}
         <div className="px-4 mb-8 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center border shrink-0"
+          <div className="w-10 h-10 rounded-full flex items-center justify-center border shrink-0 overflow-hidden"
             style={{ background: 'rgba(65,238,194,0.1)', borderColor: 'rgba(65,238,194,0.3)' }}>
-            <User size={18} style={{ color: '#41eec2' }} />
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="profile" className="w-full h-full object-cover" />
+            ) : (
+              <User size={18} style={{ color: '#41eec2' }} />
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-xs font-bold truncate" style={{ color: '#41eec2' }}>{profile?.full_name || 'Civic Reporter'}</p>
@@ -1501,7 +1505,11 @@ export default function Home({ session, isAdmin }) {
                 className="w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer overflow-hidden"
                 style={{ borderColor: 'rgba(65,238,194,0.3)', background: 'rgba(65,238,194,0.1)' }}
               >
-                <User size={17} style={{ color: '#41eec2' }} />
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={17} style={{ color: '#41eec2' }} />
+                )}
               </button>
 
               {profileOpen && (

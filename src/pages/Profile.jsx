@@ -210,9 +210,13 @@ export default function Profile() {
 
         {/* User identity */}
         <div className="px-4 mb-8 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center border shrink-0"
+          <div className="w-10 h-10 rounded-full flex items-center justify-center border shrink-0 overflow-hidden"
             style={{ background: 'rgba(65,238,194,0.1)', borderColor: 'rgba(65,238,194,0.3)' }}>
-            <User size={18} style={{ color: '#41eec2' }} />
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="profile" className="w-full h-full object-cover" />
+            ) : (
+              <User size={18} style={{ color: '#41eec2' }} />
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-xs font-bold truncate" style={{ color: '#41eec2' }}>{profile?.full_name || 'Civic Reporter'}</p>
@@ -310,7 +314,11 @@ export default function Profile() {
                 className="w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer overflow-hidden"
                 style={{ borderColor: 'rgba(65,238,194,0.3)', background: 'rgba(65,238,194,0.1)' }}
               >
-                <User size={17} style={{ color: '#41eec2' }} />
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={17} style={{ color: '#41eec2' }} />
+                )}
               </button>
 
               {profileOpen && (
@@ -380,7 +388,11 @@ export default function Profile() {
               <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
                 <div className="relative shrink-0">
                   <div className="w-28 h-28 rounded-full border-4 border-[#41eec2]/35 p-1 overflow-hidden bg-slate-900/80 flex items-center justify-center text-white text-3xl font-black">
-                    {(profile?.full_name || 'CR').slice(0, 2).toUpperCase()}
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="profile" className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                      (profile?.full_name || 'CR').slice(0, 2).toUpperCase()
+                    )}
                   </div>
                   <div className="absolute -bottom-2 -right-2 bg-[#41eec2] text-[#002118] px-3 py-1 rounded-full text-[10px] font-bold shadow-lg border border-surface">
                     Lvl {levelNum}

@@ -28,9 +28,25 @@ export const useCleanStore = create((set, get) => ({
         .eq('id', session.user.id)
         .single();
 
+      const googleAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null;
+
       if (!error && data) {
-        // Use database values
-        set({ profile: data });
+        let finalAvatar = data.avatar_url || googleAvatar;
+
+        // If the DB profile has no avatar, but we have a Google avatar, let's update the DB profile
+        if (!data.avatar_url && googleAvatar) {
+          await supabase
+            .from('profiles')
+            .update({ avatar_url: googleAvatar })
+            .eq('id', session.user.id);
+        }
+
+        set({
+          profile: {
+            ...data,
+            avatar_url: finalAvatar
+          }
+        });
       } else {
         const localPoints = parseInt(localStorage.getItem(`points_${session.user.id}`) || '120', 10);
         const localName = localStorage.getItem(`name_${session.user.id}`) || session.user.user_metadata?.full_name || 'Civic Reporter';
@@ -46,7 +62,7 @@ export const useCleanStore = create((set, get) => ({
             full_name: localName,
             points: localPoints,
             level: localLevel,
-            avatar_url: session.user.user_metadata?.avatar_url || null
+            avatar_url: googleAvatar
           }
         });
       }

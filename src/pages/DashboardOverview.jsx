@@ -48,10 +48,14 @@ function Sidebar({ profile, isAdmin, activePage }) {
       {/* User identity */}
       <div className="px-4 mb-8 flex items-center gap-3">
         <div
-          className="relative w-12 h-12 rounded-lg flex items-center justify-center border-2 shrink-0"
+          className="relative w-12 h-12 rounded-lg flex items-center justify-center border-2 shrink-0 overflow-hidden"
           style={{ background: 'rgba(65,238,194,0.1)', borderColor: 'rgba(65,238,194,0.25)' }}
         >
-          <User size={20} style={{ color: '#41eec2' }} />
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt="profile" className="w-full h-full object-cover" />
+          ) : (
+            <User size={20} style={{ color: '#41eec2' }} />
+          )}
           {/* Online indicator */}
           <div
             className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2"
@@ -342,10 +346,14 @@ export default function DashboardOverview({ session, isAdmin }) {
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer"
+                className="w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer overflow-hidden"
                 style={{ borderColor: 'rgba(65,238,194,0.3)', background: 'rgba(65,238,194,0.1)' }}
               >
-                <User size={17} style={{ color: '#41eec2' }} />
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={17} style={{ color: '#41eec2' }} />
+                )}
               </button>
               {profileOpen && (
                 <div
