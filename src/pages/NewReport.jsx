@@ -20,8 +20,8 @@ export default function NewReport({ session }) {
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState('Locating...');
   const [reportNote, setReportNote] = useState('');
-  const [wasteCategory, setWasteCategory] = useState('General Waste');
-  const [severityLevel, setSeverityLevel] = useState('Medium');
+  const [wasteCategory, setWasteCategory] = useState('');
+  const [severityLevel, setSeverityLevel] = useState('');
 
   // --- Camera logic ---
   const startCamera = async () => {
@@ -49,11 +49,9 @@ export default function NewReport({ session }) {
     }
   };
 
-  // Start camera on mount if in capture step
+  // Stop camera when leaving capture step
   useEffect(() => {
-    if (step === 'capture') {
-      startCamera();
-    } else {
+    if (step !== 'capture') {
       stopCamera();
     }
     return () => stopCamera();
@@ -87,6 +85,8 @@ export default function NewReport({ session }) {
   // --- AI Analysis Mock / Call ---
   const analyzeImage = async (dataUrl) => {
     setStep('analyzing');
+    setWasteCategory('');
+    setSeverityLevel('');
     
     // Attempt to get location while analyzing
     const loc = await fetchLocation();
@@ -106,34 +106,51 @@ export default function NewReport({ session }) {
     if (geminiKey) {
       try {
         const base64 = dataUrl.split(',')[1];
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${geminiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{
               parts: [
-                { text: 'Analyze this image. First determine if it contains actual garbage, waste, or litter. If it does NOT contain garbage, return exactly: {"isGarbage": false}. If it DOES contain garbage, return JSON: {"isGarbage": true, "category": "Plastic/E-Waste/Organic/Mixed/etc", "severity": "Low/Medium/High"}' },
+                { text: 'Analyze this image. Does it contain actual garbage, trash, litter, or illegal dumping? If the image shows a plain wall, a ceiling, a person, or normal clean objects, YOU MUST RETURN EXACTLY: {"isGarbage": false}. If it DOES contain garbage, return JSON: {"isGarbage": true, "category": "General Waste/Plastic/E-Waste/Organic/Hazardous", "severity": "Low/Medium/High/Critical"}' },
                 { inlineData: { mimeType: 'image/jpeg', data: base64 } }
               ]
             }],
-            generationConfig: { temperature: 0.2 }
+            generationConfig: { temperature: 0.1 } // Lower temp for more deterministic output
           })
         });
         const data = await res.json();
-        const text = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '');
+        
+        if (data.error) {
+          throw new Error(data.error.message);
+        }
+
+        let text = data.candidates[0].content.parts[0].text;
+        text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
         const parsed = JSON.parse(text);
         
-        if (parsed.isGarbage === false) {
-          toast.error("No garbage detected in the image. Please take a valid photo of waste.");
+        // Robust check for false
+        const isGarbageStr = String(parsed.isGarbage).toLowerCase();
+        if (isGarbageStr === 'false') {
+          toast.error("No garbage detected in the image. Please point the camera at actual waste.");
           setStep('capture');
           setPhoto(null);
           return; // Stop processing, don't proceed to details
         }
 
-        setWasteCategory(parsed.category || 'Mixed Waste');
-        setSeverityLevel(parsed.severity || 'Medium');
+        // Map AI output to valid categories (case insensitive check)
+        const categories = ["General Waste", "Plastic", "E-Waste", "Organic", "Hazardous"];
+        const matchedCat = categories.find(c => c.toLowerCase() === (parsed.category || '').toLowerCase());
+        setWasteCategory(matchedCat || 'General Waste');
+
+        const severities = ["Low", "Medium", "High", "Critical"];
+        const matchedSev = severities.find(s => s.toLowerCase() === (parsed.severity || '').toLowerCase());
+        setSeverityLevel(matchedSev || 'Medium');
+
+        toast.success("AI analyzed the image.");
       } catch (e) {
         console.error('AI failed, using fallback', e);
+        toast.info("AI analysis unavailable. Please categorize manually.");
       }
     }
 
@@ -201,6 +218,14 @@ export default function NewReport({ session }) {
   // --- Submission ---
   const handleSubmit = async () => {
     if (!photo || !location) return;
+    if (!wasteCategory) {
+      toast.error("Please select a waste category.");
+      return;
+    }
+    if (!severityLevel) {
+      toast.error("Please select a severity level.");
+      return;
+    }
     setStep('submitting');
     
     try {
@@ -274,29 +299,68 @@ export default function NewReport({ session }) {
       <main className="flex-1 overflow-y-auto flex flex-col relative">
         
         {step === 'capture' && (
-          <div className="flex-1 flex flex-col relative bg-black">
-            {stream ? (
-              <video 
-                ref={videoRef} 
-                autoPlay 
-                playsInline 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-[#c4c6cc]/50 flex-col gap-3">
-                <Camera size={48} className="animate-pulse" />
-                <p>Initializing camera...</p>
-              </div>
-            )}
+          <div className="flex-1 flex flex-col p-6 items-center justify-center bg-[#0d1520]">
+            <h2 className="text-xl font-bold text-white mb-2 text-center">Report Illegal Dumping</h2>
+            <p className="text-[#a0aab2] text-center text-sm mb-8 max-w-sm">
+              Point your camera at the garbage, capture a clear photo, and help us keep our city clean.
+            </p>
+
+            {/* Video Container */}
+            <div className="w-full max-w-md aspect-video rounded-xl border border-dashed border-[#41eec2]/30 flex flex-col items-center justify-center bg-[#1e201e]/30 overflow-hidden relative mb-8">
+              {stream ? (
+                <video 
+                  ref={videoRef} 
+                  autoPlay 
+                  playsInline 
+                  className="w-full h-full object-cover absolute inset-0"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-3 opacity-50">
+                  <div className="relative flex items-center justify-center w-12 h-12">
+                    <Camera size={32} className="text-[#c4c6cc] absolute" />
+                    <div className="absolute w-[2px] h-[40px] bg-[#c4c6cc] rotate-45" />
+                  </div>
+                  <p className="text-sm font-medium text-[#c4c6cc]">Camera is off</p>
+                  <p className="text-xs text-[#c4c6cc]">Click "Start Camera" to begin</p>
+                </div>
+              )}
+            </div>
+
             <canvas ref={canvasRef} className="hidden" />
-            
-            {/* Camera Controls Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-8 flex items-center justify-between bg-gradient-to-t from-black/90 to-transparent">
+
+            {/* Controls */}
+            <div className="flex items-center gap-4">
+              {!stream ? (
+                <button 
+                  onClick={startCamera}
+                  className="px-6 py-2 rounded-full font-bold text-[#002118] bg-[#41eec2] hover:bg-[#68dbae] transition-colors flex items-center gap-2 text-sm"
+                >
+                  <Camera size={16} />
+                  Start Camera
+                </button>
+              ) : (
+                <button 
+                  onClick={stopCamera}
+                  className="px-6 py-2 rounded-full font-bold text-white bg-red-600 hover:bg-red-500 transition-colors flex items-center gap-2 text-sm"
+                >
+                  <X size={16} />
+                  Stop Camera
+                </button>
+              )}
+              
+              <button 
+                onClick={handleCapture}
+                disabled={!stream}
+                className={`w-12 h-12 rounded-full border flex items-center justify-center transition-colors ${stream ? 'border-white/20 bg-white/10 hover:bg-white/20 text-white cursor-pointer' : 'border-white/10 bg-white/5 text-white/30 cursor-not-allowed'}`}
+              >
+                <Camera size={20} />
+              </button>
+
               <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="p-4 rounded-full bg-[#1e201e]/80 border border-[#41eec2]/30 text-[#41eec2] backdrop-blur-md"
+                className="w-12 h-12 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-[#c4c6cc] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
-                <ImageIcon size={24} />
+                <ImageIcon size={20} />
                 <input 
                   type="file" 
                   ref={fileInputRef} 
@@ -305,15 +369,6 @@ export default function NewReport({ session }) {
                   onChange={handleFileUpload}
                 />
               </button>
-
-              <button 
-                onClick={handleCapture}
-                className="w-20 h-20 rounded-full border-4 border-[#41eec2] bg-white/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform"
-              >
-                <div className="w-16 h-16 rounded-full bg-[#41eec2]" />
-              </button>
-
-              <div className="w-14" /> {/* Spacer */}
             </div>
           </div>
         )}
@@ -328,7 +383,7 @@ export default function NewReport({ session }) {
               </div>
             </div>
             <h2 className="text-2xl font-bold mb-2">Analyzing Image</h2>
-            <p className="text-[#c4c6cc]">Wolfram AI is categorizing the waste...</p>
+            <p className="text-[#c4c6cc]">AI is categorizing the waste...</p>
           </div>
         )}
 
@@ -361,11 +416,12 @@ export default function NewReport({ session }) {
                     onChange={e => setWasteCategory(e.target.value)}
                     className="w-full bg-transparent text-[#41eec2] font-semibold outline-none"
                   >
-                    <option className="bg-[#1e201e]">General Waste</option>
-                    <option className="bg-[#1e201e]">Plastic</option>
-                    <option className="bg-[#1e201e]">E-Waste</option>
-                    <option className="bg-[#1e201e]">Organic</option>
-                    <option className="bg-[#1e201e]">Hazardous</option>
+                    {!wasteCategory && <option value="" disabled>Select Category</option>}
+                    <option className="bg-[#1e201e]" value="General Waste">General Waste</option>
+                    <option className="bg-[#1e201e]" value="Plastic">Plastic</option>
+                    <option className="bg-[#1e201e]" value="E-Waste">E-Waste</option>
+                    <option className="bg-[#1e201e]" value="Organic">Organic</option>
+                    <option className="bg-[#1e201e]" value="Hazardous">Hazardous</option>
                   </select>
                 </div>
                 <div className="p-4 rounded-xl bg-[#1e201e]/60 border border-[#41eec2]/10">
@@ -375,10 +431,11 @@ export default function NewReport({ session }) {
                     onChange={e => setSeverityLevel(e.target.value)}
                     className="w-full bg-transparent text-[#41eec2] font-semibold outline-none"
                   >
-                    <option className="bg-[#1e201e]">Low</option>
-                    <option className="bg-[#1e201e]">Medium</option>
-                    <option className="bg-[#1e201e]">High</option>
-                    <option className="bg-[#1e201e]">Critical</option>
+                    {!severityLevel && <option value="" disabled>Select Severity</option>}
+                    <option className="bg-[#1e201e]" value="Low">Low</option>
+                    <option className="bg-[#1e201e]" value="Medium">Medium</option>
+                    <option className="bg-[#1e201e]" value="High">High</option>
+                    <option className="bg-[#1e201e]" value="Critical">Critical</option>
                   </select>
                 </div>
               </div>

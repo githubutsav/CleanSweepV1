@@ -563,7 +563,7 @@ export default function Home({ session, isAdmin }) {
     
     try {
       const base64 = dataUrl.split(',')[1];
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${geminiKey}`;
       const payload = {
         contents: [{
           parts: [
@@ -1448,7 +1448,6 @@ export default function Home({ session, isAdmin }) {
           </button>
 
           {[
-            { id: 'report', label: 'Report', icon: Camera },
             { id: 'explore-map', label: 'Map', icon: Map },
             { id: 'community', label: 'Community', icon: Megaphone },
           ].map(({ id, label, icon: Icon }) => {
