@@ -1565,7 +1565,7 @@ export default function Home({ session, isAdmin }) {
         </header>
 
         {/* ── Page content ── */}
-        <main className={`flex-1 w-full flex flex-col ${viewMode === 'explore-map' ? 'relative overflow-hidden bg-background h-[calc(100vh-80px)] md:h-screen' : 'px-4 sm:px-6 py-8 pb-24 md:pb-8 max-w-4xl mx-auto items-center'}`}>
+        <main className={`flex-1 w-full flex flex-col overflow-x-hidden ${viewMode === 'explore-map' ? 'relative overflow-hidden bg-background h-[calc(100vh-80px)] md:h-screen' : 'px-4 sm:px-6 py-8 pb-24 md:pb-8 max-w-4xl mx-auto items-center'}`}>
 
         {/* ── MODE: FILE REPORT ────────────────────────────────────────── */}
         {viewMode === 'report' && (
@@ -2258,8 +2258,8 @@ export default function Home({ session, isAdmin }) {
             </div>
 
 
-            {/* Map Controls (Left Bottom) */}
-            <div className="absolute left-6 bottom-24 sm:bottom-6 flex flex-col gap-2 z-20">
+            {/* Map Controls (Left Bottom) — raised above bottom nav */}
+            <div className="absolute left-4 bottom-36 sm:bottom-8 flex flex-col gap-2 z-20">
               <button 
                 type="button"
                 onClick={() => areaMapRef.current?.zoomIn()}
@@ -2416,8 +2416,8 @@ export default function Home({ session, isAdmin }) {
               </div>
             </div>
 
-            {/* Mobile Sidebar Toggle (Bottom Center on Mobile) */}
-            <div className="sm:hidden absolute bottom-24 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+            {/* Mobile Search Button — raised above bottom nav */}
+            <div className="sm:hidden absolute bottom-36 left-1/2 -translate-x-1/2 z-20 flex gap-2">
               <button 
                 className="bg-surface/80 backdrop-blur-xl border border-secondary/20 px-4 py-2 rounded-full text-secondary font-bold text-xs shadow-lg flex items-center gap-2"
                 onClick={() => {
@@ -2720,62 +2720,10 @@ export default function Home({ session, isAdmin }) {
                 })()}
               </section>
 
-              {/* Leaderboard & Impact Feed Grid */}
-              <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                
-                {/* Left: Leaderboard */}
-                <aside className="lg:col-span-4 xl:col-span-3 bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-[2rem] p-6 sm:p-8 shadow-2xl">
-                  <div className="flex items-center justify-between mb-8">
-                    <h3 className="font-headline-md text-xl font-bold text-on-surface flex items-center gap-2">
-                      <span className="material-symbols-outlined text-secondary">emoji_events</span>
-                      Eco Leaderboard
-                    </h3>
-                  </div>
-                  <div className="space-y-6">
-                    {topContributors.map((user, idx) => (
-                      <div key={idx} className="flex items-center gap-4 group">
-                        <div className={`font-stats-lg w-8 text-center italic font-bold text-lg ${idx === 0 ? 'text-secondary opacity-100' : 'text-secondary opacity-30 group-hover:opacity-100 transition-opacity'}`}>
-                          #{idx + 1}
-                        </div>
-                        <div className={`w-12 h-12 rounded-full border-2 p-0.5 ${idx === 0 ? 'border-secondary' : idx === 1 ? 'border-secondary/50' : 'border-secondary/30'}`}>
-                          <div className={`w-full h-full rounded-full bg-gradient-to-br ${getAvatarGradient(user.full_name)} flex items-center justify-center font-bold text-xs text-white`}>
-                            {user.full_name.slice(0, 2).toUpperCase()}
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-bold text-on-surface text-sm truncate">{user.full_name}</div>
-                          <div className="text-[10px] text-on-surface-variant uppercase italic truncate">{user.level}</div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-secondary font-bold text-sm">{user.points}</div>
-                          <div className="text-[10px] text-on-surface-variant">pts</div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    <div className="h-px bg-secondary/10 my-4"></div>
-                    
-                    {/* Your Rank */}
-                    <div className="flex items-center gap-4 bg-secondary/5 p-4 rounded-xl border border-secondary/15 ring-1 ring-secondary/5">
-                      <div className="font-bold text-on-surface w-8 text-center italic text-lg">#{topContributors.length + 5}</div>
-                      <div className="w-10 h-10 rounded-full border-2 border-secondary/80 p-0.5">
-                        <div className={`w-full h-full rounded-full bg-gradient-to-br ${getAvatarGradient(session?.user?.email || 'User')} flex items-center justify-center font-bold text-[10px] text-white`}>
-                          {(profile?.full_name || session?.user?.email || 'User').slice(0, 2).toUpperCase()}
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-on-surface text-sm truncate">{profile?.full_name || session?.user?.email || 'You'}</div>
-                        <div className="text-[10px] text-on-surface-variant uppercase italic truncate">Community Member</div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-secondary font-bold text-sm">{profile?.points || '--'}</div>
-                        <div className="text-[10px] text-on-surface-variant">pts</div>
-                      </div>
-                    </div>
-                  </div>
-                </aside>
+              {/* Feed + Leaderboard Grid — Feed first always, Leaderboard on right (desktop) / below (mobile) */}
+              <section className="flex flex-col lg:grid lg:grid-cols-12 gap-6 items-start">
 
-                {/* Right: Global Impact Feed */}
+                {/* Feed: left/top */}
                 <div className="lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
                   
                   {/* Feed Header / Filters */}
@@ -3004,6 +2952,55 @@ export default function Home({ session, isAdmin }) {
                   )}
 
                 </div>
+
+                {/* Leaderboard: right on desktop, below on mobile */}
+                <aside className="lg:col-span-4 xl:col-span-3 bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-[2rem] p-6 sm:p-8 shadow-2xl">
+                  <div className="flex items-center gap-2 mb-8">
+                    <span className="material-symbols-outlined text-secondary">emoji_events</span>
+                    <h3 className="font-headline-md text-xl font-bold text-on-surface">Eco Leaderboard</h3>
+                  </div>
+                  <div className="space-y-6">
+                    {topContributors.map((user, idx) => (
+                      <div key={idx} className="flex items-center gap-4 group">
+                        <div className={`font-stats-lg w-8 text-center italic font-bold text-lg ${idx === 0 ? 'text-secondary opacity-100' : 'text-secondary opacity-30 group-hover:opacity-100 transition-opacity'}`}>
+                          #{idx + 1}
+                        </div>
+                        <div className={`w-12 h-12 rounded-full border-2 p-0.5 ${idx === 0 ? 'border-secondary' : idx === 1 ? 'border-secondary/50' : 'border-secondary/30'}`}>
+                          <div className={`w-full h-full rounded-full bg-gradient-to-br ${getAvatarGradient(user.full_name)} flex items-center justify-center font-bold text-xs text-white`}>
+                            {user.full_name.slice(0, 2).toUpperCase()}
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-on-surface text-sm truncate">{user.full_name}</div>
+                          <div className="text-[10px] text-on-surface-variant uppercase italic truncate">{user.level}</div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-secondary font-bold text-sm">{user.points}</div>
+                          <div className="text-[10px] text-on-surface-variant">pts</div>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="h-px bg-secondary/10 my-4"></div>
+                    {/* Your Rank */}
+                    <div className="flex items-center gap-4 bg-secondary/5 p-4 rounded-xl border border-secondary/15 ring-1 ring-secondary/5">
+                      <div className="font-bold text-on-surface w-8 text-center italic text-lg">#{topContributors.length + 5}</div>
+                      <div className="w-10 h-10 rounded-full border-2 border-secondary/80 p-0.5">
+                        <div className={`w-full h-full rounded-full bg-gradient-to-br ${getAvatarGradient(session?.user?.email || 'User')} flex items-center justify-center font-bold text-[10px] text-white`}>
+                          {(profile?.full_name || session?.user?.email || 'User').slice(0, 2).toUpperCase()}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-on-surface text-sm truncate">{profile?.full_name || session?.user?.email || 'You'}</div>
+                        <div className="text-[10px] text-on-surface-variant uppercase italic truncate">Community Member</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-secondary font-bold text-sm">{profile?.points || '--'}</div>
+                        <div className="text-[10px] text-on-surface-variant">pts</div>
+                      </div>
+                    </div>
+                  </div>
+                </aside>
+
               </section>
             </div>
 
