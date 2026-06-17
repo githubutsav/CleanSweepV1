@@ -32,44 +32,59 @@ export const useCleanStore = create((set, get) => ({
 
       if (!error && data) {
         let finalAvatar = data.avatar_url || googleAvatar;
+        let needsUpdate = {};
 
-        // If the DB profile has no avatar, but we have a Google avatar, let's update the DB profile
+        // Save Google avatar to DB if missing
         if (!data.avatar_url && googleAvatar) {
-          await supabase
-            .from('profiles')
-            .update({ avatar_url: googleAvatar })
-            .eq('id', session.user.id);
+          needsUpdate.avatar_url = googleAvatar;
+        }
+        // Patch missing email for old accounts
+        if (!data.email && session.user.email) {
+          needsUpdate.email = session.user.email;
+        }
+        // Apply DB updates if needed
+        if (Object.keys(needsUpdate).length > 0) {
+          await supabase.from('profiles').update(needsUpdate).eq('id', session.user.id);
         }
 
         set({
           profile: {
             ...data,
-            avatar_url: finalAvatar
+            avatar_url: finalAvatar,
+            email: data.email || session.user.email || '',
           }
         });
       } else {
-        const localPoints = parseInt(localStorage.getItem(`points_${session.user.id}`) || '120', 10);
-        const localName = localStorage.getItem(`name_${session.user.id}`) || session.user.user_metadata?.full_name || 'Civic Reporter';
+        // Profile row missing — create it (handles Google OAuth & old signups)
+        const localPoints = parseInt(localStorage.getItem(`points_${session.user.id}`) || '0', 10);
+        const localName = localStorage.getItem(`name_${session.user.id}`)
+          || session.user.user_metadata?.full_name
+          || session.user.user_metadata?.name
+          || 'Civic Reporter';
         let localLevel = 'Bronze Eco-Warrior';
         if (localPoints >= 1000) localLevel = 'Diamond Earth Defender';
         else if (localPoints >= 500) localLevel = 'Platinum Green Knight';
         else if (localPoints >= 250) localLevel = 'Gold Waste Buster';
         else if (localPoints >= 100) localLevel = 'Silver Trash Tracker';
 
-        set({
-          profile: {
-            id: session.user.id,
-            full_name: localName,
-            points: localPoints,
-            level: localLevel,
-            avatar_url: googleAvatar
-          }
-        });
+        const newProfile = {
+          id: session.user.id,
+          email: session.user.email || '',
+          full_name: localName,
+          points: localPoints,
+          level: localLevel,
+          avatar_url: googleAvatar
+        };
+
+        // Insert into DB so it shows up in table editor
+        await supabase.from('profiles').upsert(newProfile, { onConflict: 'id' });
+        set({ profile: newProfile });
       }
     } catch (err) {
       console.error('Fetch profile error:', err);
     }
   },
+
 
   addPoints: async (amount) => {
     const { session, profile } = get();

@@ -1145,12 +1145,10 @@ export default function Home({ session, isAdmin }) {
 
     if (!areaMapRef.current) {
       areaMapRef.current = L.map(areaMapContainerRef.current, {
-        zoomControl: false
+        zoomControl: false // We use custom controls
       }).setView([26.8467, 80.9462], 12);
 
-      L.control.zoom({ position: 'bottomright' }).addTo(areaMapRef.current);
-
-      // Add default tile layer
+      // Add default tile layer (voyager — light, clean)
       const url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
       const attribution = '&copy; OpenStreetMap contributors &copy; CARTO';
       areaTileLayerRef.current = L.tileLayer(url, { attribution }).addTo(areaMapRef.current);
@@ -1161,13 +1159,13 @@ export default function Home({ session, isAdmin }) {
       areaMapRef.current.on('click', () => {
         setSelectedMapReport(null);
       });
-    } else {
-      setTimeout(() => {
-        if (areaMapRef.current) {
-          areaMapRef.current.invalidateSize();
-        }
-      }, 100);
     }
+    // Always invalidate size so map fills container properly on every show
+    setTimeout(() => {
+      if (areaMapRef.current) {
+        areaMapRef.current.invalidateSize();
+      }
+    }, 150);
   }, [viewMode]);
 
   // Dynamic Map Style Handler
@@ -1342,7 +1340,7 @@ export default function Home({ session, isAdmin }) {
     : null;
 
   return (
-    <div className="flex min-h-screen bg-[#111412] text-[#e2e3df] font-sans">
+    <div className="flex min-h-screen w-full overflow-x-hidden bg-[#111412] text-[#e2e3df] font-sans">
 
       {/* ── Sidebar Navigation ── */}
       <aside className="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 z-40 py-6"
@@ -2373,14 +2371,14 @@ export default function Home({ session, isAdmin }) {
                 <div className="space-y-3">
                   <label className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Map Style</label>
                   <div className="flex items-center bg-surface-container-high/50 p-1 rounded-xl">
-                    {['dark', 'map', 'satellite'].map((style) => (
+                    {['map', 'satellite'].map((style) => (
                       <button
                         key={style}
                         type="button"
                         onClick={() => setMapTileLayer(style)}
                         className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${mapTileLayer === style ? 'bg-secondary text-on-primary-fixed shadow-[0_0_10px_rgba(65,238,194,0.3)]' : 'text-on-surface-variant hover:text-on-surface'}`}
                       >
-                        {style}
+                        {style === 'map' ? 'Standard' : 'Satellite'}
                       </button>
                     ))}
                   </div>

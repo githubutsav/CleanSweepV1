@@ -259,6 +259,7 @@
 @layer base {
   body {
     @apply bg-slate-900 text-white font-sans;
+    overflow-x: hidden;
   }
 }
 
@@ -365,6 +366,12 @@
   padding: 2px 8px !important;
   border-top-left-radius: 0.5rem;
 }
+
+/* Hide Leaflet's built-in zoom control — we use custom buttons */
+.leaflet-control-zoom {
+  display: none !important;
+}
+
 
 .leaflet-container .leaflet-control-attribution a {
   color: #0284c7 !important; /* Sky blue */

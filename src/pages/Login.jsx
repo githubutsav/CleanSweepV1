@@ -58,7 +58,7 @@ export default function Login() {
 
     try {
       if (isRegistering) {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: { 
@@ -67,7 +67,18 @@ export default function Login() {
           },
         });
         if (error) throw error;
+        // Manually insert profile row so email + name appear in table editor
+        if (signUpData?.user) {
+          await supabase.from('profiles').upsert({
+            id: signUpData.user.id,
+            email: signUpData.user.email,
+            full_name: name,
+            points: 0,
+            level: 'Bronze Eco-Warrior',
+          }, { onConflict: 'id' });
+        }
         showMsg('✅ Account created! Check your email to confirm, then log in.');
+
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
