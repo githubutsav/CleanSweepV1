@@ -1462,7 +1462,6 @@ export default function Admin({ session }) {
             </form>
           </div>
         </div>
-        </div>
       )}
 
       {/* ── Mobile Bottom Nav (Matching DashboardOverview/Home) ── */}
