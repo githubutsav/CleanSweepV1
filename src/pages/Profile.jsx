@@ -729,7 +729,7 @@ export default function Profile() {
               style={isCenter ? {
                 width: 48, height: 48, borderRadius: '50%', background: '#41eec2',
                 color: '#002118', boxShadow: '0 0 15px rgba(65,238,194,0.5)', marginTop: -20,
-                display: 'flex', alignItems: 'center', justify: 'center'
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
               } : { 
                 color: isActive ? '#41eec2' : '#c4c6cc'
               }}

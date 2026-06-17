@@ -1463,7 +1463,7 @@ export default function Home({ session, isAdmin }) {
       </aside>
 
       {/* ── Main area (offset for sidebar on desktop) ── */}
-      <div className="flex-1 flex flex-col min-h-screen md:ml-64">
+      <div className="flex-1 flex flex-col min-h-screen md:ml-64 max-w-full overflow-x-hidden">
 
         {/* ── Top App Bar ── */}
         <header className="flex justify-between items-center px-6 py-4 w-full sticky top-0 z-50"
@@ -1565,7 +1565,7 @@ export default function Home({ session, isAdmin }) {
         </header>
 
         {/* ── Page content ── */}
-        <main className={`flex-1 w-full flex flex-col overflow-x-hidden ${viewMode === 'explore-map' ? 'relative overflow-hidden bg-background h-[calc(100vh-80px)] md:h-screen' : 'px-4 sm:px-6 py-8 pb-24 md:pb-8 max-w-4xl mx-auto items-center'}`}>
+        <main className={`flex-1 w-full flex flex-col ${viewMode === 'explore-map' ? 'relative overflow-hidden bg-background h-[calc(100vh-80px)] md:h-screen' : 'px-4 sm:px-6 py-8 pb-24 md:pb-8 max-w-7xl mx-auto items-center'}`}>
 
         {/* ── MODE: FILE REPORT ────────────────────────────────────────── */}
         {viewMode === 'report' && (
@@ -2728,7 +2728,7 @@ export default function Home({ session, isAdmin }) {
                   
                   {/* Feed Header / Filters */}
                   <div className="flex flex-wrap items-center justify-between gap-4 px-2">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button 
                         onClick={() => setCommunitySort('latest')}
                         className={`px-4 sm:px-6 py-2 rounded-full font-bold text-[10px] sm:text-xs tracking-wider uppercase transition-all cursor-pointer ${
@@ -2751,7 +2751,7 @@ export default function Home({ session, isAdmin }) {
                       </button>
                     </div>
                     
-                    <div className="flex items-center gap-2 sm:gap-4 bg-primary-container/40 px-3 sm:px-4 py-2 rounded-full border border-secondary/10">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 bg-primary-container/40 px-3 sm:px-4 py-2 rounded-full border border-secondary/10">
                       <span className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider shrink-0">Region:</span>
                       <select 
                         value={communityArea}
