@@ -147,10 +147,23 @@ export default function NewReport({ session }) {
   const handleCapture = () => {
     if (!videoRef.current || !canvasRef.current) return;
     const canvas = canvasRef.current;
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Compress image to max 800px
+    const maxDim = 800;
+    let w = videoRef.current.videoWidth;
+    let h = videoRef.current.videoHeight;
+    if (w > h && w > maxDim) {
+      h = Math.round((h * maxDim) / w);
+      w = maxDim;
+    } else if (h > maxDim) {
+      w = Math.round((w * maxDim) / h);
+      h = maxDim;
+    }
+    
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(videoRef.current, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Compress quality
     setPhoto(dataUrl);
     analyzeImage(dataUrl);
   };
@@ -160,9 +173,27 @@ export default function NewReport({ session }) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
-      const dataUrl = event.target.result;
-      setPhoto(dataUrl);
-      analyzeImage(dataUrl);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 800;
+        let w = img.width;
+        let h = img.height;
+        if (w > h && w > maxDim) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else if (h > maxDim) {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Compress quality
+        setPhoto(dataUrl);
+        analyzeImage(dataUrl);
+      };
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   };
