@@ -1492,23 +1492,7 @@ export default function Home({ session, isAdmin }) {
               </div>
             )}
 
-            {/* Mobile tab switcher */}
-            <div className="flex md:hidden bg-[#0c0f0d] border border-[#333533] p-0.5 rounded-full items-center gap-0.5">
-              {[
-                { id: 'report', icon: Camera },
-                { id: 'explore-map', icon: Map },
-                { id: 'community', icon: Megaphone },
-              ].map(({ id, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => { if (id === 'report') setStep('camera'); else stopCamera(); setViewMode(id); }}
-                  className="p-2 rounded-full transition-all duration-200 cursor-pointer"
-                  style={viewMode === id ? { background: '#41eec2', color: '#002118' } : { color: '#c4c6cc' }}
-                >
-                  <Icon size={14} />
-                </button>
-              ))}
-            </div>
+
 
             {/* Profile dropdown */}
             <div className="relative">
@@ -1575,7 +1559,7 @@ export default function Home({ session, isAdmin }) {
         </header>
 
         {/* ── Page content ── */}
-        <main className={`flex-1 w-full flex flex-col ${viewMode === 'explore-map' ? 'relative overflow-hidden bg-background h-[calc(100vh-80px)] md:h-screen' : 'px-4 sm:px-6 py-8 max-w-4xl mx-auto items-center'}`}>
+        <main className={`flex-1 w-full flex flex-col ${viewMode === 'explore-map' ? 'relative overflow-hidden bg-background h-[calc(100vh-80px)] md:h-screen' : 'px-4 sm:px-6 py-8 pb-24 md:pb-8 max-w-4xl mx-auto items-center'}`}>
 
         {/* ── MODE: FILE REPORT ────────────────────────────────────────── */}
         {viewMode === 'report' && (
@@ -2734,7 +2718,7 @@ export default function Home({ session, isAdmin }) {
               <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
                 {/* Left: Leaderboard */}
-                <aside className="lg:col-span-4 bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-[2rem] p-6 sm:p-8 shadow-2xl">
+                <aside className="lg:col-span-4 xl:col-span-3 bg-surface/60 backdrop-blur-xl border border-secondary/15 rounded-[2rem] p-6 sm:p-8 shadow-2xl">
                   <div className="flex items-center justify-between mb-8">
                     <h3 className="font-headline-md text-xl font-bold text-on-surface flex items-center gap-2">
                       <span className="material-symbols-outlined text-secondary">emoji_events</span>
@@ -2786,7 +2770,7 @@ export default function Home({ session, isAdmin }) {
                 </aside>
 
                 {/* Right: Global Impact Feed */}
-                <div className="lg:col-span-8 flex flex-col gap-6">
+                <div className="lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
                   
                   {/* Feed Header / Filters */}
                   <div className="flex flex-wrap items-center justify-between gap-4 px-2">
@@ -2878,7 +2862,7 @@ export default function Home({ session, isAdmin }) {
 
                             {/* Image Media */}
                             <div className="px-4 sm:px-6 pb-2">
-                              <div className="aspect-video w-full rounded-2xl overflow-hidden border border-secondary/10 group-hover:border-secondary/30 transition-all relative bg-surface-container">
+                              <div className="h-48 sm:h-64 w-full rounded-2xl overflow-hidden border border-secondary/10 group-hover:border-secondary/30 transition-all relative bg-surface-container">
                                 {report.image_url ? (
                                   <img 
                                     src={report.image_url} 
@@ -3071,6 +3055,34 @@ export default function Home({ session, isAdmin }) {
           </div>
         </div>
       )}
+
+        {/* ── Mobile Bottom Nav (Matching DashboardOverview) ── */}
+        <nav
+          className="md:hidden fixed bottom-0 left-0 right-0 flex justify-between items-center px-6 py-3 z-[6000]"
+          style={{ background: 'rgba(17,20,18,0.85)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(65,238,194,0.15)' }}
+        >
+          {[
+            { label: 'Report', icon: Camera, action: () => setViewMode('report') },
+            { label: 'Map', icon: Map, action: () => setViewMode('explore-map') },
+            { label: '', icon: Plus, action: () => setViewMode('report'), isCenter: true },
+            { label: 'Social', icon: Megaphone, action: () => setViewMode('community') },
+            { label: 'Profile', icon: User, action: () => navigate('/profile'), isActive: false },
+          ].map(({ label, icon: Icon, action, isCenter }, i) => (
+            <button
+              key={i}
+              onClick={action}
+              className="flex flex-col items-center gap-1 transition-all"
+              style={isCenter ? {
+                width: 48, height: 48, borderRadius: '50%', background: '#41eec2',
+                color: '#002118', boxShadow: '0 0 15px rgba(65,238,194,0.5)', marginTop: -20,
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              } : { color: '#c4c6cc' }}
+            >
+              <Icon size={isCenter ? 22 : 20} />
+              {label && <span className="text-[10px] font-bold">{label}</span>}
+            </button>
+          ))}
+        </nav>
 
       </div>
     </div>

@@ -25,7 +25,10 @@ import {
   Clock,
   Megaphone,
   Route,
-  AlertTriangle
+  AlertTriangle,
+  Map,
+  Camera,
+  Plus
 } from 'lucide-react';
 
 const createToastContainer = () => {
@@ -724,7 +727,7 @@ export default function Admin({ session }) {
     : null;
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-4 sm:p-6 font-sans">
+    <div className="min-h-screen bg-slate-900 text-white p-4 sm:p-6 pb-24 md:pb-6 font-sans">
       {/* Header */}
       <header className="flex justify-between items-center max-w-7xl mx-auto mb-8 bg-slate-800/40 backdrop-blur border border-slate-700/50 px-6 py-4 rounded-2xl shadow-xl relative z-50">
         <div onClick={() => navigate('/')} className="flex items-center gap-3 cursor-pointer select-none hover:opacity-90 active:scale-95 transition-all">
@@ -1459,7 +1462,36 @@ export default function Admin({ session }) {
             </form>
           </div>
         </div>
+        </div>
       )}
+
+      {/* ── Mobile Bottom Nav (Matching DashboardOverview/Home) ── */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 flex justify-between items-center px-6 py-3 z-[6000]"
+        style={{ background: 'rgba(17,20,18,0.85)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(65,238,194,0.15)' }}
+      >
+        {[
+          { label: 'Report', icon: Camera, action: () => navigate('/dashboard/report', { state: { viewMode: 'report' } }) },
+          { label: 'Map', icon: Map, action: () => navigate('/dashboard/report', { state: { viewMode: 'explore-map' } }) },
+          { label: '', icon: Plus, action: () => navigate('/dashboard/report', { state: { viewMode: 'report' } }), isCenter: true },
+          { label: 'Social', icon: Megaphone, action: () => navigate('/dashboard/report', { state: { viewMode: 'community' } }) },
+          { label: 'Profile', icon: User, action: () => navigate('/profile'), isActive: false },
+        ].map(({ label, icon: Icon, action, isCenter }, i) => (
+          <button
+            key={i}
+            onClick={action}
+            className="flex flex-col items-center gap-1 transition-all"
+            style={isCenter ? {
+              width: 48, height: 48, borderRadius: '50%', background: '#41eec2',
+              color: '#002118', boxShadow: '0 0 15px rgba(65,238,194,0.5)', marginTop: -20,
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            } : { color: '#c4c6cc' }}
+          >
+            <Icon size={isCenter ? 22 : 20} />
+            {label && <span className="text-[10px] font-bold">{label}</span>}
+          </button>
+        ))}
+      </nav>
 
     </div>
   );
