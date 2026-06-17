@@ -1705,12 +1705,12 @@ export default function Home({ session, isAdmin }) {
                           onClick={handleUploadClick}
                           className="group relative aspect-video md:aspect-[21/9] rounded-xl border-2 border-dashed border-secondary/30 bg-surface-container-low/40 flex flex-col items-center justify-center cursor-pointer hover:border-secondary transition-all overflow-hidden"
                         >
-                          <div className="flex flex-col items-center gap-4 group-hover:scale-105 transition-transform duration-500">
+                          <div className="flex flex-col items-center gap-4 group-hover:scale-105 transition-transform duration-500 text-center px-4">
                             <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-all duration-300">
                               <span className="material-symbols-outlined text-secondary text-4xl">add_a_photo</span>
                             </div>
-                            <span className="font-headline-md text-headline-md text-secondary">Click to Capture or Upload</span>
-                            <span className="text-on-surface-variant font-label-sm">Supports JPG, PNG up to 10MB</span>
+                            <span className="font-headline-md text-base sm:text-headline-md text-secondary">Click to Capture or Upload</span>
+                            <span className="text-on-surface-variant font-label-sm text-xs sm:text-sm">Supports JPG, PNG up to 10MB</span>
                           </div>
                           <input 
                             ref={fileInputRef}
@@ -1747,13 +1747,13 @@ export default function Home({ session, isAdmin }) {
                       </div>
                     )}
 
-                    <div className="mt-8 flex justify-between items-center">
-                      <div>
+                    <div className="mt-8 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+                      <div className="w-full sm:w-auto flex">
                         {!photo && !stream && (
                           <button
                             type="button"
                             onClick={startCamera}
-                            className="px-6 py-3 border border-secondary/30 text-secondary font-bold rounded-lg hover:bg-secondary/10 transition-all flex items-center gap-2 cursor-pointer"
+                            className="w-full justify-center px-4 sm:px-6 py-3 border border-secondary/30 text-secondary font-bold rounded-lg hover:bg-secondary/10 transition-all flex items-center gap-2 cursor-pointer"
                           >
                             <span className="material-symbols-outlined text-sm">photo_camera</span>
                             Use Live Camera
@@ -1763,7 +1763,7 @@ export default function Home({ session, isAdmin }) {
                       <button 
                         disabled={!photo || isAnalyzing}
                         onClick={() => setReportStep(2)}
-                        className={`px-8 py-3 font-bold rounded-lg shadow-lg transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`w-full sm:w-auto justify-center px-6 sm:px-8 py-3 font-bold rounded-lg shadow-lg transition-all flex items-center gap-2 cursor-pointer ${
                           photo && !isAnalyzing
                             ? 'bg-secondary text-on-primary-fixed hover:shadow-secondary/30 hover:scale-[1.02]' 
                             : 'bg-surface-container-highest text-on-surface-variant opacity-50 cursor-not-allowed'
