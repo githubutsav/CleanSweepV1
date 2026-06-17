@@ -282,9 +282,9 @@ export default function NewReport({ session }) {
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-[100] bg-[#000805] text-[#e2e3df] flex flex-col font-sans">
+    <div className="fixed inset-0 z-[100] bg-[#111412] text-[#e2e3df] flex flex-col font-sans">
       {/* Top Header */}
-      <header className="flex items-center justify-between px-4 py-4 border-b border-[#41eec2]/10 bg-[#0d1b2a]/90 backdrop-blur-md">
+      <header className="flex items-center justify-between px-4 py-4 border-b border-[#41eec2]/10 bg-[#111412]/90 backdrop-blur-md">
         <button 
           onClick={() => navigate('/dashboard')}
           className="p-2 rounded-full hover:bg-white/10 transition-colors"
@@ -299,7 +299,7 @@ export default function NewReport({ session }) {
       <main className="flex-1 overflow-y-auto flex flex-col relative">
         
         {step === 'capture' && (
-          <div className="flex-1 flex flex-col p-6 items-center justify-center bg-[#0d1520]">
+          <div className="flex-1 flex flex-col p-6 items-center justify-center bg-[#111412]">
             <h2 className="text-xl font-bold text-white mb-2 text-center">Report Illegal Dumping</h2>
             <p className="text-[#a0aab2] text-center text-sm mb-8 max-w-sm">
               Point your camera at the garbage, capture a clear photo, and help us keep our city clean.

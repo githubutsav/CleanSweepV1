@@ -273,7 +273,7 @@ export default function Home({ session, isAdmin }) {
   const navigate = useNavigate();
   const routerLocation = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
-  const [viewMode, setViewMode] = useState(routerLocation.state?.viewMode || 'community'); // 'explore-map' | 'community'
+  const [viewMode, setViewMode] = useState(routerLocation.state?.viewMode || 'report'); // 'report' | 'explore-map' | 'community'
   const [reportNote, setReportNote] = useState('');
   const [topContributors, setTopContributors] = useState([]);
   const [initialUrlCheckDone, setInitialUrlCheckDone] = useState(false);
@@ -1448,6 +1448,7 @@ export default function Home({ session, isAdmin }) {
           </button>
 
           {[
+            { id: 'report', label: 'Report', icon: Camera },
             { id: 'explore-map', label: 'Map', icon: Map },
             { id: 'community', label: 'Community', icon: Megaphone },
           ].map(({ id, label, icon: Icon }) => {
@@ -1455,7 +1456,7 @@ export default function Home({ session, isAdmin }) {
             return (
               <button
                 key={id}
-                onClick={() => { if (id === 'report') { navigate('/dashboard/new-report'); } else { stopCamera(); setViewMode(id); } }}
+                onClick={() => { stopCamera(); setViewMode(id); }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer text-left"
                 style={isActive ? {
                   background: '#41eec2',

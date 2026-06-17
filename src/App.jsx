@@ -57,7 +57,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0d1b2a] text-white flex-col gap-4 relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center bg-[#111412] text-white flex-col gap-4 relative overflow-hidden">
         <div className="glass-orb-1" />
         <div className="glass-orb-2" />
         <div className="glass-orb-3" />

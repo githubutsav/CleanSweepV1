@@ -190,7 +190,6 @@ export default function DashboardOverview({ session, isAdmin }) {
   const [reports, setReports] = useState([]);
   const [myReports, setMyReports] = useState([]);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [chartRange, setChartRange] = useState('7');
 
   // Fetch profile & reports
   useEffect(() => {
@@ -296,7 +295,8 @@ export default function DashboardOverview({ session, isAdmin }) {
   const topArea = Object.entries(areaCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Lucknow';
 
   return (
-    <div className="flex min-h-screen bg-[#0d1b2a] text-[#e2e3df] font-sans overflow-x-hidden">
+    <div className="flex min-h-screen bg-[#111412] text-[#e2e3df] font-sans overflow-x-hidden relative">
+      <div className="fixed inset-0 z-[-1] pointer-events-none bg-gradient-to-b from-[#0D1B2A]/20 via-[#111412] to-[#111412]" />
 
       {/* Sidebar */}
       <Sidebar profile={profile} isAdmin={isAdmin} activePage="dashboard" />
@@ -308,7 +308,7 @@ export default function DashboardOverview({ session, isAdmin }) {
         <header
           className="flex justify-between items-center px-6 py-4 w-full sticky top-0 z-50"
           style={{
-            background: 'rgba(13,27,42,0.7)',
+            background: 'rgba(17,20,18,0.6)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             borderBottom: '1px solid rgba(65,238,194,0.15)',
@@ -331,7 +331,7 @@ export default function DashboardOverview({ session, isAdmin }) {
             {profile && (
               <div
                 className="hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full border"
-                style={{ background: 'rgba(13,27,42,0.4)', borderColor: 'rgba(65,238,194,0.2)' }}
+                style={{ background: 'rgba(30,32,30,0.4)', borderColor: 'rgba(65,238,194,0.2)' }}
               >
                 <span style={{ color: '#41eec2' }}>🌿</span>
                 <span className="text-sm font-bold" style={{ color: '#41eec2', fontFamily: 'Inter, sans-serif' }}>
@@ -514,15 +514,7 @@ export default function DashboardOverview({ session, isAdmin }) {
                     Reports filed per day in your area
                   </p>
                 </div>
-                <select
-                  value={chartRange}
-                  onChange={e => setChartRange(e.target.value)}
-                  className="text-sm rounded-lg px-4 py-2 border outline-none cursor-pointer transition-all"
-                  style={{ background: '#1e201e', borderColor: 'rgba(65,238,194,0.2)', color: '#e2e3df', fontFamily: 'Inter, sans-serif' }}
-                >
-                  <option value="7">Last 7 Days</option>
-                  <option value="30">Last 30 Days</option>
-                </select>
+
               </div>
               <div className="flex-1 w-full min-h-[280px] relative">
                 <CleanlinessChart reports={reports} />
@@ -707,9 +699,9 @@ export default function DashboardOverview({ session, isAdmin }) {
                 <button
                   onClick={() => navigate('/dashboard/report')}
                   className="p-3 rounded-xl transition-all"
-                  style={{ background: 'rgba(13,27,42,0.8)', border: '1px solid rgba(65,238,194,0.2)', color: '#41eec2' }}
+                  style={{ background: 'rgba(17,20,18,0.8)', border: '1px solid rgba(65,238,194,0.2)', color: '#41eec2' }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(65,238,194,0.1)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(13,27,42,0.8)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(17,20,18,0.8)'}
                 >
                   <TrendingUp size={18} />
                 </button>
