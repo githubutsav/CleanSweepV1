@@ -28,5 +28,4 @@ dist-ssr
 .env.*
 
 # Supabase SQL files (contain sensitive schema/credentials)
-*.sql
-
+# Removed *.sql so we can push the setup scripts to GitHub as requested

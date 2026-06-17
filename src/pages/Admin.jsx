@@ -24,7 +24,8 @@ import {
   Compass,
   Clock,
   Megaphone,
-  Route
+  Route,
+  AlertTriangle
 } from 'lucide-react';
 
 const createToastContainer = () => {
@@ -612,6 +613,22 @@ export default function Admin({ session }) {
         setClearNote('');
         alert('Cleared successfully. Run SQL migration to add admin_note column.');
       }
+    }
+  };
+
+  const handleManualVerify = async (reportId) => {
+    try {
+      const { error } = await supabase
+        .from('reports')
+        .update({ confidence: 1.0, admin_note: 'Classification manually verified by Admin' })
+        .eq('id', reportId);
+      if (error) throw error;
+      setReports((prev) =>
+        prev.map((r) => (r.id === reportId ? { ...r, confidence: 1.0, admin_note: 'Classification manually verified by Admin' } : r))
+      );
+      showToast('Report classification verified successfully!', 'success');
+    } catch (err) {
+      showToast(`Error verifying: ${err.message}`, 'error');
     }
   };
 
@@ -1269,6 +1286,18 @@ export default function Admin({ session }) {
                           <CheckCircle size={10} /> Mark Cleared
                         </button>
                       )}
+                      
+                      {/* Manual Verify button for low confidence AI results */}
+                      {(report.confidence !== null && report.confidence < 0.8) && (
+                        <button 
+                          onClick={() => handleManualVerify(report.id)}
+                          className="bg-amber-600/90 hover:bg-amber-500 text-white font-semibold text-[10px] px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition"
+                          title={`AI Confidence was low (${(report.confidence * 100).toFixed(0)}%)`}
+                        >
+                          <AlertTriangle size={10} /> Verify AI
+                        </button>
+                      )}
+
                       <button 
                         onClick={() => handleStatusChange(report.id, 'archived')}
                         className="bg-slate-700 hover:bg-slate-600 text-slate-300 font-semibold text-[10px] px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition border border-slate-600/50"

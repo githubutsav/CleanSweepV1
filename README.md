@@ -38,7 +38,7 @@ It serves as a civic waste management platform that empowers citizens to report 
 - 🗺️ **Explore Map** — Browse all reports on an interactive map with status filters
 - 🏘️ **Community Feed** — See what others are reporting, like posts, and join discussions
 - 🏆 **Points & Leaderboard** — Earn points for logging in, reporting waste, and confirming cleanups
-- 🛍️ **Marketplace** — Redeem points for rewards and offers
+- 🛍️ **Marketplace** — Redeem points for rewards and offers. *(Rewards are funded through municipal partnerships, local business sponsorships, and CSR initiatives aimed at community cleanliness).*
 - 👤 **User Profile** — View your stats, report history, and earned badges
 - 🛠️ **Admin Dashboard** — Municipal staff can manage reports and update dustbin statuses
 
@@ -130,7 +130,7 @@ The app uses Supabase with the following core tables:
 - `post_likes` / `post_comments` — Engagement on posts
 - `leaderboard` — Top contributors view
 
-> **Note:** SQL setup scripts are excluded from this repo for security. Set up your own Supabase project and configure the tables accordingly.
+> **Note:** SQL setup scripts are located in the `database/` directory. Run `database/setup.sql` in your Supabase SQL editor to create the necessary tables and policies.
 
 ---
 
@@ -149,6 +149,8 @@ When a citizen photographs waste, the image is sent to a Wolfram Cloud API that 
 | Recyclable | Knowledge Base lookup | ♻️ Yes |
 | Decomposition | `EntityValue` | "450 years" |
 
+> **Scalability Note & Fallback:** To ensure high availability and robust performance, CleanSweep is designed to fallback to vision models like **Google Gemini** if the Wolfram Cloud API encounters rate limits or image processing timeouts.
+
 ```wolfram
 (* Core classification logic *)
 identified = ImageIdentify[#image, All, 3];
@@ -159,6 +161,8 @@ severity = assessSeverity[category];
 ### Route Optimization (`optimize_route.wl`)
 
 Municipal admins can compute the **optimal garbage truck route** across all pending reports using Wolfram's **Travelling Salesman Problem solver**:
+
+> **Scalability Note & Fallback:** While Wolfram Cloud handles moderate datasets elegantly, computing Traveling Salesman tours at a massive city scale may encounter execution timeouts or rate limits. As a fallback for enterprise deployment, CleanSweep's routing architecture is designed to integrate seamlessly with dedicated routing engines like **Leaflet Routing Machine** or Google OR-Tools.
 
 ```wolfram
 (* Solve TSP across all report GPS coordinates *)
