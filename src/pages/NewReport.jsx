@@ -112,7 +112,7 @@ export default function NewReport({ session }) {
           body: JSON.stringify({
             contents: [{
               parts: [
-                { text: 'Analyze this waste. Return JSON only: {"category": "Plastic/E-Waste/etc", "severity": "Low/Medium/High"}' },
+                { text: 'Analyze this image. First determine if it contains actual garbage, waste, or litter. If it does NOT contain garbage, return exactly: {"isGarbage": false}. If it DOES contain garbage, return JSON: {"isGarbage": true, "category": "Plastic/E-Waste/Organic/Mixed/etc", "severity": "Low/Medium/High"}' },
                 { inlineData: { mimeType: 'image/jpeg', data: base64 } }
               ]
             }],
@@ -122,14 +122,22 @@ export default function NewReport({ session }) {
         const data = await res.json();
         const text = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '');
         const parsed = JSON.parse(text);
+        
+        if (parsed.isGarbage === false) {
+          toast.error("No garbage detected in the image. Please take a valid photo of waste.");
+          setStep('capture');
+          setPhoto(null);
+          return; // Stop processing, don't proceed to details
+        }
+
         setWasteCategory(parsed.category || 'Mixed Waste');
         setSeverityLevel(parsed.severity || 'Medium');
       } catch (e) {
-        console.error('AI failed, using fallback');
+        console.error('AI failed, using fallback', e);
       }
     }
 
-    // Give it a small timeout to feel like it's analyzing
+    // Give it a small timeout to feel like it's analyzing (if AI succeeded or fell back)
     setTimeout(() => {
       setStep('details');
     }, 1500);
