@@ -1482,7 +1482,7 @@ export default function Admin({ session }) {
         {[
           { label: 'Report', icon: Camera, action: () => navigate('/dashboard/report', { state: { viewMode: 'report' } }) },
           { label: 'Map', icon: Map, action: () => navigate('/dashboard/report', { state: { viewMode: 'explore-map' } }) },
-          { label: '', icon: Plus, action: () => navigate('/dashboard/report', { state: { viewMode: 'report' } }), isCenter: true },
+          { label: '', icon: Plus, action: () => navigate('/dashboard/report', { state: { viewMode: 'report', autoStartCamera: true } }), isCenter: true },
           { label: 'Social', icon: Megaphone, action: () => navigate('/dashboard/report', { state: { viewMode: 'community' } }) },
           { label: 'Profile', icon: User, action: () => navigate('/profile'), isActive: false },
         ].map(({ label, icon: Icon, action, isCenter }, i) => (

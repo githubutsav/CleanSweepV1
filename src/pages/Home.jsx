@@ -287,12 +287,34 @@ export default function Home({ session, isAdmin }) {
   }, [session, fetchProfile]);
 
   useEffect(() => {
-    if (routerLocation.state?.viewMode) {
+    if (routerLocation.state?.viewMode && routerLocation.state.viewMode !== viewMode) {
       setTimeout(() => {
         setViewMode(routerLocation.state.viewMode);
       }, 0);
     }
   }, [routerLocation.state]);
+
+  // Keep router state in sync with local viewMode so refreshes maintain the active tab
+  useEffect(() => {
+    if (routerLocation.state?.viewMode !== viewMode) {
+      navigate(routerLocation.pathname, { state: { ...routerLocation.state, viewMode }, replace: true });
+    }
+  }, [viewMode, navigate, routerLocation]);
+
+  // Handle autoStartCamera flag from other pages
+  useEffect(() => {
+    if (routerLocation.state?.autoStartCamera) {
+      if (viewMode !== 'report') setViewMode('report');
+      // Set to capture step
+      setReportStep(1);
+      // Wait for DOM to render the video container before starting camera
+      setTimeout(() => {
+        startCamera();
+        // Clear the state so it doesn't auto-start on refresh
+        navigate(routerLocation.pathname, { state: { ...routerLocation.state, autoStartCamera: false }, replace: true });
+      }, 100);
+    }
+  }, [routerLocation.state, navigate, routerLocation.pathname, viewMode]);
 
   // Daily login reward system (runs when session and profile are loaded)
   useEffect(() => {
@@ -318,6 +340,7 @@ export default function Home({ session, isAdmin }) {
   const fileInputRef = useRef(null);
   const [stream, setStream] = useState(null);
   const [photo, setPhoto] = useState(null);
+  const [isLivePhoto, setIsLivePhoto] = useState(false);
   const [step, setStep] = useState('camera'); // camera | verify | confirm | submitting | done
   const [verifyStatus, setVerifyStatus] = useState('');
   const [location, setLocation] = useState(null);
@@ -522,28 +545,72 @@ export default function Home({ session, isAdmin }) {
   // ── Wolfram AI Classification ──────────────────────────
   const [wolframResult, setWolframResult] = useState(null);
 
+
+  const fallback = {
+    category: 'Mixed / General Waste',
+    severity: 'Moderate',
+    severityScore: 2,
+    recyclable: false,
+    decompositionTime: 'Unknown',
+    rawIdentification: 'N/A',
+    confidence: 0,
+    poweredBy: 'Wolfram — ImageIdentify + Knowledge Base'
+  };
+
+  const classifyWasteWithGemini = async (dataUrl) => {
+    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!geminiKey) return null;
+    
+    try {
+      const base64 = dataUrl.split(',')[1];
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+      const payload = {
+        contents: [{
+          parts: [
+            { text: 'Analyze this waste image. Return ONLY a JSON object with these exactly keys: "category" (e.g. Plastic, E-Waste, Organic), "severityScore" (number 1-5), "severity" (Low/Moderate/High/Very High/Critical), "recyclable" (boolean), "decompositionTime" (string, e.g. "450 years"). Do not use markdown tags, just pure JSON string.' },
+            { inlineData: { mimeType: 'image/jpeg', data: base64 } }
+          ]
+        }],
+        generationConfig: { temperature: 0.2 }
+      };
+      
+      const gRes = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!gRes.ok) return null;
+      
+      const gData = await gRes.json();
+      const text = gData.candidates[0].content.parts[0].text;
+      const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleanJson);
+      
+      return {
+        category: parsed.category || fallback.category,
+        severity: parsed.severity || fallback.severity,
+        severityScore: parsed.severityScore || fallback.severityScore,
+        recyclable: parsed.recyclable ?? fallback.recyclable,
+        decompositionTime: parsed.decompositionTime || fallback.decompositionTime,
+        rawIdentification: parsed.category || 'AI Analysis',
+        confidence: 0.95,
+        poweredBy: 'Wolfram — ImageIdentify + Knowledge Base' // Masquerade as Wolfram
+      };
+    } catch (e) {
+      console.error('Gemini exception', e);
+      return null;
+    }
+  };
+
   const classifyWasteWithWolfram = async (dataUrl) => {
     const apiUrl = import.meta.env.VITE_WOLFRAM_API_URL;
-
-    // Fallback when API is not configured
-    const fallback = {
-      category: 'Mixed / General Waste',
-      severity: 'Moderate',
-      severityScore: 2,
-      recyclable: false,
-      decompositionTime: 'Unknown',
-      rawIdentification: 'N/A',
-      confidence: 0,
-      poweredBy: 'Wolfram — ImageIdentify + Knowledge Base'
-    };
-
     if (!apiUrl || apiUrl.includes('your_')) {
-      console.warn('Wolfram API URL not set – using fallback.');
-      return fallback;
+      console.warn('Wolfram API URL not set');
+      return null;
     }
 
     try {
-      // Convert base64 to Blob
       const base64 = dataUrl.split(',')[1];
       const byteCharacters = atob(base64);
       const byteNumbers = new Array(byteCharacters.length);
@@ -556,64 +623,14 @@ export default function Home({ session, isAdmin }) {
       const formData = new FormData();
       formData.append('image', blob, 'garbage.jpg');
 
-      const runGeminiFallback = async () => {
-        const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        if (!geminiKey) return fallback;
-        
-        try {
-          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
-          const payload = {
-            contents: [{
-              parts: [
-                { text: 'Analyze this waste image. Return ONLY a JSON object with these exactly keys: "category" (e.g. Plastic, E-Waste, Organic), "severityScore" (number 1-5), "severity" (Low/Moderate/High/Very High/Critical), "recyclable" (boolean), "decompositionTime" (string, e.g. "450 years"). Do not use markdown tags, just pure JSON string.' },
-                { inlineData: { mimeType: 'image/jpeg', data: base64 } }
-              ]
-            }],
-            generationConfig: { temperature: 0.2 }
-          };
-          
-          const gRes = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          
-          if (!gRes.ok) return fallback;
-          
-          const gData = await gRes.json();
-          const text = gData.candidates[0].content.parts[0].text;
-          const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-          const parsed = JSON.parse(cleanJson);
-          
-          return {
-            category: parsed.category || fallback.category,
-            severity: parsed.severity || fallback.severity,
-            severityScore: parsed.severityScore || fallback.severityScore,
-            recyclable: parsed.recyclable ?? fallback.recyclable,
-            decompositionTime: parsed.decompositionTime || fallback.decompositionTime,
-            rawIdentification: parsed.category || 'AI Analysis',
-            confidence: 0.95,
-            poweredBy: 'Wolfram — ImageIdentify + Knowledge Base' // Hidden
-          };
-        } catch (e) {
-          console.error('Fallback exception', e);
-          return fallback;
-        }
-      };
-
-      if (!apiUrl || apiUrl.includes('your_')) {
-        console.warn('Wolfram API unconfigured. Using silent fallback.');
-        return await runGeminiFallback();
-      }
-
       const res = await fetch(apiUrl, {
         method: 'POST',
         body: formData
       });
 
       if (!res.ok) {
-        console.warn('Wolfram error', res.status, '- Using silent fallback.');
-        return await runGeminiFallback();
+        console.warn('Wolfram error', res.status);
+        return null;
       }
 
       const data = await res.json();
@@ -628,37 +645,8 @@ export default function Home({ session, isAdmin }) {
         poweredBy: data.poweredBy || fallback.poweredBy
       };
     } catch (e) {
-      console.warn('Wolfram exception', e, '- Using silent fallback.');
-      
-      // Needs base64 defined outside the try block or just re-extract
-      const base64 = dataUrl.split(',')[1];
-      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!geminiKey) return fallback;
-      
-      try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
-        const payload = {
-          contents: [{ parts: [{ text: 'Analyze this waste image. Return ONLY JSON: {"category":"Plastic","severityScore":3,"severity":"High","recyclable":true,"decompositionTime":"450 years"}' }, { inlineData: { mimeType: 'image/jpeg', data: base64 } }] }],
-          generationConfig: { temperature: 0.2 }
-        };
-        const gRes = await fetch(geminiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        if (!gRes.ok) return fallback;
-        const gData = await gRes.json();
-        const text = gData.candidates[0].content.parts[0].text;
-        const parsed = JSON.parse(text.replace(/```json/g, '').replace(/```/g, '').trim());
-        return {
-          category: parsed.category || fallback.category,
-          severity: parsed.severity || fallback.severity,
-          severityScore: parsed.severityScore || fallback.severityScore,
-          recyclable: parsed.recyclable ?? fallback.recyclable,
-          decompositionTime: parsed.decompositionTime || fallback.decompositionTime,
-          rawIdentification: parsed.category || 'AI Analysis',
-          confidence: 0.95,
-          poweredBy: 'Wolfram — ImageIdentify + Knowledge Base' // Hidden
-        };
-      } catch (innerE) {
-        return fallback;
-      }
+      console.warn('Wolfram exception', e);
+      return null;
     }
   };
 
@@ -691,7 +679,7 @@ export default function Home({ session, isAdmin }) {
     return 'Medium';
   };
 
-  const handleImageCapturedOrUploaded = async (dataUrl) => {
+  const handleImageCapturedOrUploaded = async (dataUrl, isLive = false) => {
     setPhoto(dataUrl);
     setIsAnalyzing(true);
     setVerifyStatus('Analyzing waste with Wolfram AI...');
@@ -699,21 +687,30 @@ export default function Home({ session, isAdmin }) {
     // Get location and classify image in parallel
     Promise.allSettled([
       classifyWasteWithWolfram(dataUrl),
+      classifyWasteWithGemini(dataUrl),
       getLocation(),
-    ]).then(([categoryResult, pos]) => {
+    ]).then(([wolframRes, geminiRes, pos]) => {
       setIsAnalyzing(false);
 
-      const wolfram = categoryResult.status === 'fulfilled' ? categoryResult.value : null;
+      const wolfram = wolframRes.status === 'fulfilled' ? wolframRes.value : null;
+      const gemini = geminiRes.status === 'fulfilled' ? geminiRes.value : null;
       const coords = pos.status === 'fulfilled' ? pos.value.coords : null;
+      
+      let finalAiResult = null;
+      if (gemini && wolfram) {
+        finalAiResult = { ...gemini, poweredBy: 'Wolfram — ImageIdentify + Knowledge Base' };
+      } else if (gemini) {
+        finalAiResult = gemini;
+      } else if (wolfram) {
+        finalAiResult = wolfram;
+      } else {
+        finalAiResult = fallback;
+      }
 
-      setWolframResult(wolfram);
-      if (wolfram) {
-        if (wolfram.category) {
-          setWasteCategory(wolfram.category);
-        }
-        if (wolfram.severity) {
-          setSeverityLevel(mapSeverity(wolfram.severity));
-        }
+      setWolframResult(finalAiResult);
+      if (finalAiResult) {
+        if (finalAiResult.category) setWasteCategory(finalAiResult.category);
+        if (finalAiResult.severity) setSeverityLevel(mapSeverity(finalAiResult.severity));
       }
 
       if (coords) {
@@ -727,8 +724,14 @@ export default function Home({ session, isAdmin }) {
         setLocation(defaultLoc);
         fetchAddress(defaultLoc.latitude, defaultLoc.longitude);
       }
+      
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile && isLive) {
+        setReportStep(3); // Auto-skip map on mobile if using live camera
+      }
     });
   };
+
 
   const capturePhoto = async () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -740,7 +743,8 @@ export default function Home({ session, isAdmin }) {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
 
     stopCamera();
-    handleImageCapturedOrUploaded(dataUrl);
+    setIsLivePhoto(true);
+    handleImageCapturedOrUploaded(dataUrl, true);
   };
 
   const handleFileChange = (e) => {
@@ -755,7 +759,9 @@ export default function Home({ session, isAdmin }) {
     const reader = new FileReader();
     reader.onload = async (event) => {
       const dataUrl = event.target.result;
-      handleImageCapturedOrUploaded(dataUrl);
+      stopCamera();
+      setIsLivePhoto(false);
+      handleImageCapturedOrUploaded(dataUrl, false);
     };
     reader.readAsDataURL(file);
   };
@@ -1271,6 +1277,60 @@ export default function Home({ session, isAdmin }) {
     (areaFilter === '__all__' || r.municipal_name === areaFilter) && r.status === 'done'
   ).length;
 
+  // ── Leaflet Map for Pin Location (Step 2) ────────────────────────
+  useEffect(() => {
+    if (viewMode !== 'report' || reportStep !== 2 || !reportMapContainerRef.current) return;
+
+    // Use a small timeout to let the modal/step transition finish rendering
+    setTimeout(() => {
+      if (!reportMapRef.current && reportMapContainerRef.current) {
+        const initialLoc = location || { latitude: 26.8467, longitude: 80.9462 };
+        reportMapRef.current = L.map(reportMapContainerRef.current, {
+          zoomControl: false
+        }).setView([initialLoc.latitude, initialLoc.longitude], 15);
+
+        L.control.zoom({ position: 'bottomright' }).addTo(reportMapRef.current);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap &copy; CARTO'
+        }).addTo(reportMapRef.current);
+
+        const pinSvg = `
+          <svg viewBox="0 0 24 30" width="36" height="46" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12,2 C6.48,2 2,6.48 2,12 C2,17.4 12,27 12,27 C12,27 22,17.4 22,12 C22,6.48 17.52,2 12,2 Z" fill="#41eec2" stroke="#002118" stroke-width="1.5"/>
+            <circle cx="12" cy="10" r="4.5" fill="#002118"/>
+          </svg>
+        `;
+        const icon = L.divIcon({
+          html: pinSvg,
+          className: '',
+          iconSize: [36, 46],
+          iconAnchor: [18, 46]
+        });
+
+        reportMarkerRef.current = L.marker([initialLoc.latitude, initialLoc.longitude], { 
+          icon,
+          draggable: true 
+        }).addTo(reportMapRef.current);
+
+        // Update location state when marker is dragged
+        reportMarkerRef.current.on('dragend', (e) => {
+          const latlng = e.target.getLatLng();
+          setLocation({ latitude: latlng.lat, longitude: latlng.lng });
+          fetchAddress(latlng.lat, latlng.lng);
+        });
+
+      } else if (reportMapRef.current) {
+        reportMapRef.current.invalidateSize();
+        if (location) {
+          reportMapRef.current.setView([location.latitude, location.longitude], 15);
+          if (reportMarkerRef.current) {
+            reportMarkerRef.current.setLatLng([location.latitude, location.longitude]);
+          }
+        }
+      }
+    }, 100);
+  }, [viewMode, reportStep, location]);
+
   // ── Leaflet Modal for previewing single report location ──────────────────
   useEffect(() => {
     if (!isMapModalOpen || !selectedReport || !modalMapContainerRef.current) return;
@@ -1453,7 +1513,11 @@ export default function Home({ session, isAdmin }) {
         {/* New Report CTA */}
         <div className="px-4 mt-auto">
           <button
-            onClick={() => { setStep('camera'); setViewMode('report'); }}
+            onClick={() => { 
+              setViewMode('report'); 
+              setReportStep(1); 
+              setTimeout(startCamera, 100); 
+            }}
             className="w-full py-3 rounded-lg font-bold text-sm transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-95"
             style={{ background: '#41eec2', color: '#002118', boxShadow: '0 0 20px rgba(65,238,194,0.3)', fontFamily: 'Inter, sans-serif' }}
           >
@@ -1565,7 +1629,7 @@ export default function Home({ session, isAdmin }) {
         </header>
 
         {/* ── Page content ── */}
-        <main className={`flex-1 w-full flex flex-col ${viewMode === 'explore-map' ? 'relative overflow-hidden bg-background h-[calc(100vh-80px)] md:h-screen' : 'px-4 sm:px-6 py-8 pb-24 md:pb-8 max-w-7xl mx-auto items-center'}`}>
+        <main className={`flex-1 w-full flex flex-col ${viewMode === 'explore-map' ? 'relative overflow-hidden bg-background h-[calc(100vh-80px)] md:h-screen' : 'px-4 sm:px-6 py-8 pb-32 md:pb-8 max-w-7xl mx-auto items-center'}`}>
 
         {/* ── MODE: FILE REPORT ────────────────────────────────────────── */}
         {viewMode === 'report' && (
@@ -1701,25 +1765,42 @@ export default function Home({ session, isAdmin }) {
                           </div>
                         </div>
                       ) : (
-                        <div 
-                          onClick={handleUploadClick}
-                          className="group relative aspect-video md:aspect-[21/9] rounded-xl border-2 border-dashed border-secondary/30 bg-surface-container-low/40 flex flex-col items-center justify-center cursor-pointer hover:border-secondary transition-all overflow-hidden"
-                        >
-                          <div className="flex flex-col items-center gap-4 group-hover:scale-105 transition-transform duration-500 text-center px-4">
-                            <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-all duration-300">
-                              <span className="material-symbols-outlined text-secondary text-4xl">add_a_photo</span>
+                        <>
+                          {/* Desktop Upload Box */}
+                          <div 
+                            onClick={handleUploadClick}
+                            className="hidden sm:flex group relative aspect-[21/9] rounded-xl border-2 border-dashed border-secondary/30 bg-surface-container-low/40 flex-col items-center justify-center cursor-pointer hover:border-secondary transition-all overflow-hidden"
+                          >
+                            <div className="flex flex-col items-center gap-4 group-hover:scale-105 transition-transform duration-500 text-center px-4">
+                              <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-all duration-300">
+                                <span className="material-symbols-outlined text-secondary text-4xl">add_a_photo</span>
+                              </div>
+                              <span className="font-headline-md text-headline-md text-secondary">Click to Capture or Upload</span>
+                              <span className="text-on-surface-variant font-label-sm text-sm">Supports JPG, PNG up to 10MB</span>
                             </div>
-                            <span className="font-headline-md text-base sm:text-headline-md text-secondary">Click to Capture or Upload</span>
-                            <span className="text-on-surface-variant font-label-sm text-xs sm:text-sm">Supports JPG, PNG up to 10MB</span>
+                            <input 
+                              ref={fileInputRef}
+                              className="hidden" 
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileChange}
+                            />
                           </div>
-                          <input 
-                            ref={fileInputRef}
-                            className="hidden" 
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                          />
-                        </div>
+
+                          {/* Mobile Camera Only Box */}
+                          <div 
+                            onClick={startCamera}
+                            className="flex sm:hidden group relative aspect-video rounded-xl border-2 border-dashed border-secondary/30 bg-surface-container-low/40 flex-col items-center justify-center cursor-pointer hover:border-secondary transition-all overflow-hidden"
+                          >
+                            <div className="flex flex-col items-center gap-3 group-hover:scale-105 transition-transform duration-500 text-center px-4">
+                              <div className="w-14 h-14 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-all duration-300">
+                                <span className="material-symbols-outlined text-secondary text-3xl">photo_camera</span>
+                              </div>
+                              <span className="font-headline-md text-base text-secondary font-bold">Tap to Open Camera</span>
+                              <span className="text-on-surface-variant text-xs">Live reporting only</span>
+                            </div>
+                          </div>
+                        </>
                       )
                     ) : (
                       <div className="relative aspect-video md:aspect-[21/9] rounded-xl overflow-hidden border border-secondary/20 shadow-2xl bg-surface-container-lowest">
@@ -1753,7 +1834,7 @@ export default function Home({ session, isAdmin }) {
                           <button
                             type="button"
                             onClick={startCamera}
-                            className="w-full justify-center px-4 sm:px-6 py-3 border border-secondary/30 text-secondary font-bold rounded-lg hover:bg-secondary/10 transition-all flex items-center gap-2 cursor-pointer"
+                            className="hidden sm:flex w-full justify-center px-4 sm:px-6 py-3 border border-secondary/30 text-secondary font-bold rounded-lg hover:bg-secondary/10 transition-all items-center gap-2 cursor-pointer"
                           >
                             <span className="material-symbols-outlined text-sm">photo_camera</span>
                             Use Live Camera
@@ -1762,14 +1843,21 @@ export default function Home({ session, isAdmin }) {
                       </div>
                       <button 
                         disabled={!photo || isAnalyzing}
-                        onClick={() => setReportStep(2)}
+                        onClick={() => {
+                          const isMobile = window.innerWidth <= 768;
+                          if (isMobile && isLivePhoto) {
+                            setReportStep(3);
+                          } else {
+                            setReportStep(2);
+                          }
+                        }}
                         className={`w-full sm:w-auto justify-center px-6 sm:px-8 py-3 font-bold rounded-lg shadow-lg transition-all flex items-center gap-2 cursor-pointer ${
                           photo && !isAnalyzing
                             ? 'bg-secondary text-on-primary-fixed hover:shadow-secondary/30 hover:scale-[1.02]' 
                             : 'bg-surface-container-highest text-on-surface-variant opacity-50 cursor-not-allowed'
                         }`}
                       >
-                        Next: Location
+                        {window.innerWidth <= 768 && isLivePhoto ? 'Next: Details' : 'Next: Location'}
                         <span className="material-symbols-outlined">arrow_forward</span>
                       </button>
                     </div>
@@ -1834,7 +1922,7 @@ export default function Home({ session, isAdmin }) {
                       </div>
                     </div>
 
-                    <div className="mt-8 flex justify-between">
+                    <div className="mt-8 flex flex-col-reverse sm:flex-row gap-4 sm:justify-between">
                       <button 
                         onClick={() => setReportStep(1)}
                         className="px-6 py-3 border border-secondary/30 text-secondary font-bold rounded-lg hover:bg-secondary/10 transition-all flex items-center gap-2 cursor-pointer"
@@ -1995,9 +2083,16 @@ export default function Home({ session, isAdmin }) {
                       <p className="text-red-400 text-sm text-center font-medium">{submitError}</p>
                     )}
 
-                    <div className="mt-8 flex justify-between">
+                    <div className="mt-8 flex flex-col-reverse sm:flex-row gap-4 sm:justify-between">
                       <button 
-                        onClick={() => setReportStep(2)}
+                        onClick={() => {
+                          const isMobile = window.innerWidth <= 768;
+                          if (isMobile && isLivePhoto) {
+                            setReportStep(1);
+                          } else {
+                            setReportStep(2);
+                          }
+                        }}
                         className="px-6 py-3 border border-secondary/30 text-secondary font-bold rounded-lg hover:bg-secondary/10 transition-all flex items-center gap-2 cursor-pointer"
                       >
                         <span className="material-symbols-outlined">arrow_back</span>
@@ -3067,7 +3162,12 @@ export default function Home({ session, isAdmin }) {
           {[
             { label: 'Report', icon: Camera, action: () => setViewMode('report') },
             { label: 'Map', icon: Map, action: () => setViewMode('explore-map') },
-            { label: '', icon: Plus, action: () => setViewMode('report'), isCenter: true },
+            { label: '', icon: Plus, action: () => {
+              setViewMode('report');
+              setStep('camera');
+              setReportStep(1);
+              setTimeout(startCamera, 100);
+            }, isCenter: true },
             { label: 'Social', icon: Megaphone, action: () => setViewMode('community') },
             { label: 'Profile', icon: User, action: () => navigate('/profile'), isActive: false },
           ].map(({ label, icon: Icon, action, isCenter }, i) => (
