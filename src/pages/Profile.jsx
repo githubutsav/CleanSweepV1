@@ -183,7 +183,7 @@ export default function Profile() {
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { id: 'report',    label: 'Report',    icon: Camera,          path: '/dashboard/report', state: { viewMode: 'report' } },
+    { id: 'report',    label: 'My Reports',icon: Camera,          path: '/dashboard/report', state: { viewMode: 'report' } },
     { id: 'map',       label: 'Map',       icon: Map,             path: '/dashboard/report', state: { viewMode: 'explore-map' } },
     { id: 'community', label: 'Community', icon: Megaphone,       path: '/dashboard/report', state: { viewMode: 'community' } },
     { id: 'marketplace', label: 'Marketplace', icon: Store,       path: '/marketplace' },

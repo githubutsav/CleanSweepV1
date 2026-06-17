@@ -15,7 +15,7 @@ function Sidebar({ profile, isAdmin, activePage }) {
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { id: 'report',    label: 'Report',    icon: Camera,          path: '/dashboard/report' },
+    { id: 'report',    label: 'My Reports',icon: Camera,          path: '/dashboard/report' },
     { id: 'map',       label: 'Map',       icon: Map,             path: '/dashboard/report' },
     { id: 'community', label: 'Community', icon: Megaphone,       path: '/dashboard/report' },
     { id: 'marketplace', label: 'Marketplace', icon: Store,       path: '/marketplace' },
