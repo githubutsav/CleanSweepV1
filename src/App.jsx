@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabaseClient';
 import Login from './pages/Login';
 import Home from './pages/Home';
+import NewReport from './pages/NewReport';
 import Landing from './pages/Landing';
 import Admin from './pages/Admin';
 import Marketplace from './pages/Marketplace';
@@ -92,6 +93,11 @@ function App() {
         <Route
           path="/dashboard/report"
           element={session ? <Home session={session} isAdmin={isAdmin} /> : <Navigate to="/login" />}
+        />
+        {/* Dedicated Report page */}
+        <Route
+          path="/dashboard/new-report"
+          element={session ? <NewReport session={session} isAdmin={isAdmin} /> : <Navigate to="/login" />}
         />
 
         {/* Admin */}

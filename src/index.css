@@ -569,6 +569,14 @@
   width: calc(100vw - 40px);
 }
 
+@media (max-width: 768px) {
+  .toast-container {
+    top: auto;
+    bottom: 80px;
+    left: 20px;
+  }
+}
+
 .toast-card {
   position: relative;
   display: flex;

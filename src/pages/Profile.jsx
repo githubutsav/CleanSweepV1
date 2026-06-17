@@ -266,7 +266,7 @@ export default function Profile() {
         {/* New Report CTA */}
         <div className="px-4 mt-auto">
           <button
-            onClick={() => navigate('/dashboard/report', { state: { viewMode: 'report', autoStartCamera: true } })}
+            onClick={() => navigate('/dashboard/new-report')}
             className="w-full py-3 rounded-lg font-bold text-sm transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-95"
             style={{ background: '#41eec2', color: '#002118', boxShadow: '0 0 20px rgba(65,238,194,0.3)', fontFamily: 'Inter, sans-serif' }}
           >
@@ -716,9 +716,9 @@ export default function Profile() {
           style={{ background: 'rgba(17,20,18,0.85)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(65,238,194,0.15)' }}
         >
           {[
-            { label: 'Report', icon: Camera, action: () => navigate('/dashboard/report', { state: { viewMode: 'report' } }) },
+            { label: 'Report', icon: Camera, action: () => navigate('/dashboard/new-report') },
             { label: 'Map', icon: Map, action: () => navigate('/dashboard/report', { state: { viewMode: 'explore-map' } }) },
-            { label: '', icon: Plus, action: () => navigate('/dashboard/report', { state: { viewMode: 'report', autoStartCamera: true } }), isCenter: true },
+            { label: '', icon: Plus, action: () => navigate('/dashboard/new-report'), isCenter: true },
             { label: 'Social', icon: Megaphone, action: () => navigate('/dashboard/report', { state: { viewMode: 'community' } }) },
             { label: 'Profile', icon: User, action: () => {}, isActive: true },
           ].map(({ label, icon: Icon, action, isCenter, isActive }, i) => (

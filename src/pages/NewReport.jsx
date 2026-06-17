@@ -269,11 +269,11 @@ function ThreePlanet() {
   );
 }
 
-export default function Home({ session, isAdmin }) {
+export default function NewReport({ session, isAdmin }) {
   const navigate = useNavigate();
   const routerLocation = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
-  const [viewMode, setViewMode] = useState(routerLocation.state?.viewMode || 'community'); // 'explore-map' | 'community'
+  const [viewMode, setViewMode] = useState(routerLocation.state?.viewMode || 'report'); // 'report' | 'explore-map' | 'community'
   const [reportNote, setReportNote] = useState('');
   const [topContributors, setTopContributors] = useState([]);
   const [initialUrlCheckDone, setInitialUrlCheckDone] = useState(false);
@@ -535,8 +535,29 @@ export default function Home({ session, isAdmin }) {
   // ── Geolocation ─────────────────────────────────────────────────
   const getLocation = () =>
     new Promise((resolve, reject) => {
-      if (!navigator.geolocation) return reject(new Error('Geolocation not supported'));
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
+      const fallbackToIP = async () => {
+        try {
+          const res = await fetch('https://ipinfo.io/json');
+          const data = await res.json();
+          if (data.loc) {
+            const [lat, lng] = data.loc.split(',');
+            resolve({ coords: { latitude: parseFloat(lat), longitude: parseFloat(lng) } });
+          } else {
+            reject(new Error('IP location failed'));
+          }
+        } catch (err) {
+          reject(err);
+        }
+      };
+
+      if (!navigator.geolocation) {
+        return fallbackToIP();
+      }
+
+      navigator.geolocation.getCurrentPosition(resolve, () => {
+        // Fallback to IP geolocation if GPS/permissions fail (very common on HTTP mobile testing)
+        fallbackToIP();
+      }, {
         enableHighAccuracy: true,
         timeout: 10000,
       });
@@ -1456,7 +1477,7 @@ export default function Home({ session, isAdmin }) {
             return (
               <button
                 key={id}
-                onClick={() => { if (id === 'report') { navigate('/dashboard/new-report'); } else { stopCamera(); setViewMode(id); } }}
+                onClick={() => { if (id === 'report') { setStep('camera'); } else { stopCamera(); } setViewMode(id); }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer text-left"
                 style={isActive ? {
                   background: '#41eec2',
@@ -1513,7 +1534,11 @@ export default function Home({ session, isAdmin }) {
         {/* New Report CTA */}
         <div className="px-4 mt-auto">
           <button
-            onClick={() => navigate('/dashboard/new-report')}
+            onClick={() => { 
+              setViewMode('report'); 
+              setReportStep(1); 
+              setTimeout(startCamera, 100); 
+            }}
             className="w-full py-3 rounded-lg font-bold text-sm transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-95"
             style={{ background: '#41eec2', color: '#002118', boxShadow: '0 0 20px rgba(65,238,194,0.3)', fontFamily: 'Inter, sans-serif' }}
           >
@@ -3156,9 +3181,14 @@ export default function Home({ session, isAdmin }) {
           style={{ background: 'rgba(17,20,18,0.85)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(65,238,194,0.15)' }}
         >
           {[
-            { label: 'Report', icon: Camera, action: () => navigate('/dashboard/new-report') },
+            { label: 'Report', icon: Camera, action: () => setViewMode('report') },
             { label: 'Map', icon: Map, action: () => setViewMode('explore-map') },
-            { label: '', icon: Plus, action: () => navigate('/dashboard/new-report'), isCenter: true },
+            { label: '', icon: Plus, action: () => {
+              setViewMode('report');
+              setStep('camera');
+              setReportStep(1);
+              setTimeout(startCamera, 100);
+            }, isCenter: true },
             { label: 'Social', icon: Megaphone, action: () => setViewMode('community') },
             { label: 'Profile', icon: User, action: () => navigate('/profile'), isActive: false },
           ].map(({ label, icon: Icon, action, isCenter }, i) => (
