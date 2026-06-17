@@ -412,6 +412,9 @@ export default function Marketplace() {
               <p className="text-xs text-on-surface-variant leading-relaxed">
                 Clean Sweep partners with local municipal crews in Lucknow to plant native trees. Redeem your points to plant a tree on your behalf—absolutely free, with no monetary transactions involved.
               </p>
+              <p className="text-[10px] text-emerald-400/80 italic mt-1 font-semibold">
+                * All marketplace rewards and plantation drives are funded through municipal partnerships, local business sponsorships, and CSR initiatives.
+              </p>
             </div>
 
             {/* Tree Catalog Grid */}
