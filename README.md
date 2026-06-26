@@ -26,8 +26,10 @@ It serves as a civic waste management platform that empowers citizens to report 
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 ## Demo Link
-<div align = "center">
-<img src="https://img.shields.io/badge/Live Demo-CleanSweep V1-00C853?style=for-the-badge&amp;logo=vercel&amp;logoColor=white" alt="Live Demo">
+<div align="center">
+  <a href="https://cleansweepv1.vercel.app/" target="_blank">
+    <img src="https://img.shields.io/badge/Live Demo-CleanSweep V1-00C853?style=for-the-badge&amp;logo=vercel&amp;logoColor=white" alt="Live Demo">
+  </a>
 </div>
 
 ---
